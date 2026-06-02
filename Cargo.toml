@@ -2,6 +2,13 @@
 name = "lazyfossil"
 version = "0.1.0"
 edition = "2021"
+description = "A lazygit-inspired TUI for Fossil SCM"
+license = "MIT"
+readme = "README.md"
+homepage = "https://geraldo.dev/lazyfossil"
+repository = "https://geraldo.dev/lazyfossil"
+keywords = ["fossil", "tui", "terminal", "scm"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 anyhow = "1"

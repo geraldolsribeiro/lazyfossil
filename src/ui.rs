@@ -16,7 +16,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
 
     let tabs = Tabs::new(vec!["Working tree", "History"])
         .select(if state.tab == Tab::WorkingTree { 0 } else { 1 })
-        .block(Block::default().borders(Borders::ALL).title("pi-lazyfossil"));
+        .block(Block::default().borders(Borders::ALL).title("lazyfossil"));
     frame.render_widget(tabs, areas[0]);
 
     let body = Layout::default()
