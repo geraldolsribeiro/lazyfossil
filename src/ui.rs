@@ -1,6 +1,7 @@
 use crate::app::{AppState, Tab};
 use ratatui::prelude::*;
-use ratatui::style::{Modifier, Style};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap};
 
 pub fn draw(frame: &mut Frame, state: &AppState) {
@@ -9,7 +10,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         .constraints([
             Constraint::Length(3),
             Constraint::Min(0),
-            Constraint::Length(2),
+            Constraint::Length(1),
         ])
         .split(frame.area());
 
@@ -43,24 +44,33 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             .block(Block::default().borders(Borders::ALL).title("Files"))
     };
 
-    let right_text = if let Some(repo) = &state.repo {
+    let right = if let Some(repo) = &state.repo {
         match state.tab {
-            Tab::WorkingTree => state.diff.clone().unwrap_or_else(|| "Select a file to view diff".to_string()),
-            Tab::History => repo
-                .timeline
-                .iter()
-                .take(12)
-                .map(|t| format!("{} {}", t.rid, t.message))
-                .collect::<Vec<_>>()
-                .join("\n"),
+            Tab::WorkingTree => {
+                let diff = state.diff.clone().unwrap_or_else(|| "Select a file to view diff".to_string());
+                let text = color_diff(diff);
+                Paragraph::new(text)
+                    .scroll((state.diff_scroll, 0))
+                    .block(Block::default().borders(Borders::ALL).title("Details"))
+                    .wrap(Wrap { trim: false })
+            }
+            Tab::History => {
+                let text = Text::from(
+                    repo.timeline
+                        .iter()
+                        .take(12)
+                        .map(|t| Line::from(format!("{} {}", t.rid, t.message)))
+                        .collect::<Vec<_>>(),
+                );
+                Paragraph::new(text)
+                    .block(Block::default().borders(Borders::ALL).title("Details"))
+                    .wrap(Wrap { trim: true })
+            }
         }
     } else {
-        state.error.clone().unwrap_or_else(|| "Open a Fossil checkout to begin".to_string())
+        Paragraph::new(state.error.clone().unwrap_or_else(|| "Open a Fossil checkout to begin".to_string()))
+            .block(Block::default().borders(Borders::ALL).title("Details"))
     };
-
-    let right = Paragraph::new(right_text)
-        .block(Block::default().borders(Borders::ALL).title("Details"))
-        .wrap(Wrap { trim: true });
 
     frame.render_stateful_widget(left, body[0], &mut file_state);
     frame.render_widget(right, body[1]);
@@ -74,7 +84,28 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         "q quit  r refresh  tab switch view".to_string()
     };
 
-    let footer = Paragraph::new(footer_text)
-        .block(Block::default().borders(Borders::ALL));
+    let footer = Paragraph::new(footer_text);
     frame.render_widget(footer, areas[2]);
+}
+
+fn color_diff(diff: String) -> Text<'static> {
+    let lines = diff
+        .lines()
+        .map(|line| {
+            let style = if line.starts_with("+++") || line.starts_with("---") {
+                Style::default().fg(Color::Blue)
+            } else if line.starts_with("@@") {
+                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+            } else if line.starts_with('+') {
+                Style::default().fg(Color::Green)
+            } else if line.starts_with('-') {
+                Style::default().fg(Color::Red)
+            } else {
+                Style::default().fg(Color::Reset)
+            };
+            Line::from(Span::styled(line.to_string(), style))
+        })
+        .collect::<Vec<_>>();
+
+    Text::from(lines)
 }
