@@ -39,6 +39,7 @@ pub struct AppState {
     pub tab: Tab,
     pub repo: Option<RepoState>,
     pub error: Option<String>,
+    pub diff: Option<String>,
 }
 
 impl App {
@@ -49,6 +50,7 @@ impl App {
                 tab: Tab::WorkingTree,
                 repo: None,
                 error: None,
+                diff: None,
             },
         }
     }
@@ -58,13 +60,52 @@ impl App {
             Ok(repo) => {
                 self.state.repo = Some(repo);
                 self.state.error = None;
+                self.refresh_diff();
             }
             Err(FossilError::NotRepository) => {
                 self.state.repo = None;
+                self.state.diff = None;
                 self.state.error = Some("Not inside a Fossil checkout".to_string());
             }
             Err(err) => self.state.error = Some(err.to_string()),
         }
+    }
+
+    fn refresh_diff(&mut self) {
+        if let Some(repo) = &self.state.repo {
+            if let Some(file) = repo.files.get(repo.selected_file) {
+                self.state.diff = Some(match self.client.diff_for(&file.path) {
+                    Ok(diff) => {
+                        if diff.trim().is_empty() {
+                            format!("No diff for {}", file.path)
+                        } else {
+                            diff
+                        }
+                    }
+                    Err(err) => format!("diff error for {}: {}", file.path, err),
+                });
+            } else {
+                self.state.diff = Some("No file selected".to_string());
+            }
+        }
+    }
+
+    fn select_prev(&mut self) {
+        if let Some(repo) = &mut self.state.repo {
+            if repo.selected_file > 0 {
+                repo.selected_file -= 1;
+            }
+        }
+        self.refresh_diff();
+    }
+
+    fn select_next(&mut self) {
+        if let Some(repo) = &mut self.state.repo {
+            if repo.selected_file + 1 < repo.files.len() {
+                repo.selected_file += 1;
+            }
+        }
+        self.refresh_diff();
     }
 
     fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
@@ -77,6 +118,8 @@ impl App {
                     match key.code {
                         KeyCode::Char('q') => break,
                         KeyCode::Char('r') => self.refresh(),
+                        KeyCode::Up => self.select_prev(),
+                        KeyCode::Down => self.select_next(),
                         KeyCode::Tab => {
                             self.state.tab = match self.state.tab {
                                 Tab::WorkingTree => Tab::History,

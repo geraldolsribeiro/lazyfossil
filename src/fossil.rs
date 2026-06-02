@@ -5,6 +5,7 @@ use std::process::Command;
 pub struct RepoState {
     pub files: Vec<FileStatus>,
     pub timeline: Vec<TimelineEntry>,
+    pub selected_file: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -52,7 +53,12 @@ impl FossilClient {
         Ok(RepoState {
             files: parse_status(&status),
             timeline: parse_timeline(&timeline),
+            selected_file: 0,
         })
+    }
+
+    pub fn diff_for(&self, path: &str) -> std::result::Result<String, FossilError> {
+        self.run(&["diff", "--", path])
     }
 
     pub fn ensure_repo(&self) -> std::result::Result<(), FossilError> {
@@ -88,10 +94,10 @@ fn parse_status(out: &str) -> Vec<FileStatus> {
     out.lines()
         .filter_map(|line| {
             line.strip_prefix("EDITED ")
-                .map(|path| FileStatus { path: path.to_string(), status: "edited".to_string() })
-                .or_else(|| line.strip_prefix("ADDED   ").map(|path| FileStatus { path: path.to_string(), status: "added".to_string() }))
-                .or_else(|| line.strip_prefix("DELETED ").map(|path| FileStatus { path: path.to_string(), status: "deleted".to_string() }))
-                .or_else(|| line.strip_prefix("CHECKED-OUT ").map(|path| FileStatus { path: path.to_string(), status: "checked-out".to_string() }))
+                .map(|path| FileStatus { path: path.trim().to_string(), status: "edited".to_string() })
+                .or_else(|| line.strip_prefix("ADDED   ").map(|path| FileStatus { path: path.trim().to_string(), status: "added".to_string() }))
+                .or_else(|| line.strip_prefix("DELETED ").map(|path| FileStatus { path: path.trim().to_string(), status: "deleted".to_string() }))
+                .or_else(|| line.strip_prefix("CHECKED-OUT ").map(|path| FileStatus { path: path.trim().to_string(), status: "checked-out".to_string() }))
         })
         .collect()
 }
