@@ -6,6 +6,7 @@ use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use std::fs;
 use std::io;
 use std::time::Duration;
 
@@ -79,15 +80,27 @@ impl App {
         if let Some(repo) = &self.state.repo {
             if let Some(file) = repo.files.get(repo.selected_file) {
                 self.state.diff_scroll = 0;
-                self.state.diff = Some(match self.client.diff_for(&file.path) {
-                    Ok(diff) => {
-                        if diff.trim().is_empty() {
-                            format!("No diff for {}", file.path)
-                        } else {
-                            diff
+                self.state.diff = Some(match file.status.as_str() {
+                    "extra" => match fs::read_to_string(&file.path) {
+                        Ok(content) => {
+                            if content.trim().is_empty() {
+                                format!("Empty file: {}", file.path)
+                            } else {
+                                content
+                            }
                         }
-                    }
-                    Err(err) => format!("diff error for {}: {}", file.path, err),
+                        Err(err) => format!("content error for {}: {}", file.path, err),
+                    },
+                    _ => match self.client.diff_for(&file.path) {
+                        Ok(diff) => {
+                            if diff.trim().is_empty() {
+                                format!("No diff for {}", file.path)
+                            } else {
+                                diff
+                            }
+                        }
+                        Err(err) => format!("diff error for {}: {}", file.path, err),
+                    },
                 });
             } else {
                 self.state.diff = Some("No file selected".to_string());

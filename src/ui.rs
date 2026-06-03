@@ -33,7 +33,14 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             .enumerate()
             .map(|(i, f)| {
                 let prefix = if i == repo.selected_file { ">" } else { " " };
-                ListItem::new(format!("{} {}  {}", prefix, f.status, f.path))
+                let kind = match f.status.as_str() {
+                    "extra" => "E",
+                    "edited" => "M",
+                    "added" => "A",
+                    "deleted" => "D",
+                    _ => "?",
+                };
+                ListItem::new(format!("{} {} {}", prefix, kind, f.path))
             })
             .collect();
         List::new(items)
@@ -78,7 +85,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
     let footer_text = if let Some(repo) = &state.repo {
         repo.files
             .get(repo.selected_file)
-            .map(|f| format!("q quit  r refresh  tab switch view  | selected: {} ({})", f.path, f.status))
+            .map(|f| format!("q quit  r refresh  tab switch view  | selected: {} [{}]", f.path, f.status))
             .unwrap_or_else(|| "q quit  r refresh  tab switch view".to_string())
     } else {
         "q quit  r refresh  tab switch view".to_string()

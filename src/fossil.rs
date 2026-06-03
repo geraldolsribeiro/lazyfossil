@@ -49,9 +49,10 @@ impl FossilClient {
     pub fn repo_state(&self) -> std::result::Result<RepoState, FossilError> {
         self.ensure_repo()?;
         let status = self.run(&["status"])?;
+        let extras = self.run(&["extra"]).unwrap_or_default();
         let timeline = self.run(&["timeline", "-n", "20", "ci"]).unwrap_or_default();
         Ok(RepoState {
-            files: parse_status(&status),
+            files: merge_files(parse_status(&status), parse_extra(&extras)),
             timeline: parse_timeline(&timeline),
             selected_file: 0,
         })
@@ -59,6 +60,10 @@ impl FossilClient {
 
     pub fn diff_for(&self, path: &str) -> std::result::Result<String, FossilError> {
         self.run(&["diff", "--", path])
+    }
+
+    pub fn cat_file(&self, path: &str) -> std::result::Result<String, FossilError> {
+        self.run(&["cat", path])
     }
 
     pub fn ensure_repo(&self) -> std::result::Result<(), FossilError> {
@@ -100,6 +105,24 @@ fn parse_status(out: &str) -> Vec<FileStatus> {
                 .or_else(|| line.strip_prefix("CHECKED-OUT ").map(|path| FileStatus { path: path.trim().to_string(), status: "checked-out".to_string() }))
         })
         .collect()
+}
+
+fn parse_extra(out: &str) -> Vec<FileStatus> {
+    out.lines()
+        .filter_map(|line| {
+            let path = line.trim();
+            (!path.is_empty()).then(|| FileStatus { path: path.to_string(), status: "extra".to_string() })
+        })
+        .collect()
+}
+
+fn merge_files(mut status: Vec<FileStatus>, extras: Vec<FileStatus>) -> Vec<FileStatus> {
+    for extra in extras {
+        if !status.iter().any(|file| file.path == extra.path) {
+            status.push(extra);
+        }
+    }
+    status
 }
 
 fn parse_timeline(out: &str) -> Vec<TimelineEntry> {
