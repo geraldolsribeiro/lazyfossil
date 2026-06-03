@@ -42,6 +42,16 @@ pub struct AppState {
     pub error: Option<String>,
     pub diff: Option<String>,
     pub diff_scroll: u16,
+    pub selected_files: Vec<String>,
+    pub commit_prompt: Option<String>,
+    pub commit_target: CommitTarget,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum CommitTarget {
+    Selected,
+    Current,
+    All,
 }
 
 impl App {
@@ -54,6 +64,9 @@ impl App {
                 error: None,
                 diff: None,
                 diff_scroll: 0,
+                selected_files: Vec::new(),
+                commit_prompt: None,
+                commit_target: CommitTarget::Selected,
             },
         }
     }
@@ -70,6 +83,7 @@ impl App {
                 self.state.repo = None;
                 self.state.diff = None;
                 self.state.diff_scroll = 0;
+                self.state.selected_files.clear();
                 self.state.error = Some("Not inside a Fossil checkout".to_string());
             }
             Err(err) => self.state.error = Some(err.to_string()),
@@ -83,22 +97,12 @@ impl App {
                 self.state.diff = Some(match file.status.as_str() {
                     "extra" => match fs::read_to_string(&file.path) {
                         Ok(content) => {
-                            if content.trim().is_empty() {
-                                format!("Empty file: {}", file.path)
-                            } else {
-                                content
-                            }
+                            if content.trim().is_empty() { format!("Empty file: {}", file.path) } else { content }
                         }
                         Err(err) => format!("content error for {}: {}", file.path, err),
                     },
                     _ => match self.client.diff_for(&file.path) {
-                        Ok(diff) => {
-                            if diff.trim().is_empty() {
-                                format!("No diff for {}", file.path)
-                            } else {
-                                diff
-                            }
-                        }
+                        Ok(diff) => if diff.trim().is_empty() { format!("No diff for {}", file.path) } else { diff },
                         Err(err) => format!("diff error for {}: {}", file.path, err),
                     },
                 });
@@ -108,81 +112,126 @@ impl App {
         }
     }
 
+    fn current_file_path(&self) -> Option<String> {
+        self.state.repo.as_ref()?.files.get(self.state.repo.as_ref()?.selected_file).map(|f| f.path.clone())
+    }
+
     fn toggle_selected_file(&mut self) {
+        let Some(path) = self.current_file_path() else { return; };
+        if let Some(pos) = self.state.selected_files.iter().position(|p| p == &path) {
+            self.state.selected_files.remove(pos);
+        } else {
+            self.state.selected_files.push(path);
+        }
+    }
+
+    fn start_commit(&mut self, target: CommitTarget) {
+        self.state.commit_target = target;
+        self.state.commit_prompt = Some(String::new());
+    }
+
+    fn submit_commit(&mut self) {
+        let Some(message) = self.state.commit_prompt.take() else { return; };
+        let message = message.trim().to_string();
+        if message.is_empty() {
+            self.state.error = Some("Commit message cannot be empty".to_string());
+            return;
+        }
         let Some(repo) = &self.state.repo else { return; };
-        let Some(file) = repo.files.get(repo.selected_file) else { return; };
-        let path = file.path.clone();
-        let result = match file.status.as_str() {
-            "extra" => self.client.add_file(&path),
-            "added" => self.client.forget_file(&path),
-            _ => return,
+        let current_path = self.current_file_path();
+        let mut paths = match self.state.commit_target {
+            CommitTarget::Selected => {
+                if self.state.selected_files.is_empty() {
+                    current_path.into_iter().collect::<Vec<_>>()
+                } else {
+                    self.state.selected_files.clone()
+                }
+            }
+            CommitTarget::Current => current_path.into_iter().collect::<Vec<_>>(),
+            CommitTarget::All => repo.files.iter().map(|f| f.path.clone()).collect(),
         };
+        if paths.is_empty() {
+            self.state.error = Some("No file selected".to_string());
+            return;
+        }
+
+        let extras: Vec<String> = paths
+            .iter()
+            .filter_map(|path| repo.files.iter().find(|f| &f.path == path && f.status == "extra").map(|f| f.path.clone()))
+            .collect();
+
+        let result = (|| {
+            if !extras.is_empty() {
+                self.client.add_files(&extras)?;
+            }
+            self.client.commit_paths(&paths, &message)
+        })();
 
         match result {
-            Ok(_) => self.refresh(),
+            Ok(_) => {
+                self.state.selected_files.clear();
+                self.refresh();
+            }
             Err(err) => self.state.error = Some(err.to_string()),
         }
     }
 
-    fn select_prev(&mut self) {
-        if let Some(repo) = &mut self.state.repo {
-            if repo.selected_file > 0 {
-                repo.selected_file -= 1;
-            }
+    fn cancel_commit(&mut self) {
+        self.state.commit_prompt = None;
+    }
+
+    fn handle_commit_input(&mut self, code: KeyCode) {
+        let Some(buf) = self.state.commit_prompt.as_mut() else { return; };
+        match code {
+            KeyCode::Esc => self.cancel_commit(),
+            KeyCode::Enter => self.submit_commit(),
+            KeyCode::Backspace => { buf.pop(); }
+            KeyCode::Char(c) => buf.push(c),
+            _ => {}
         }
+    }
+
+    fn select_prev(&mut self) {
+        if let Some(repo) = &mut self.state.repo { if repo.selected_file > 0 { repo.selected_file -= 1; } }
         self.refresh_diff();
     }
 
-    fn scroll_diff_up(&mut self) {
-        self.state.diff_scroll = self.state.diff_scroll.saturating_sub(1);
-    }
-
-    fn scroll_diff_down(&mut self) {
-        self.state.diff_scroll = self.state.diff_scroll.saturating_add(1);
-    }
+    fn scroll_diff_up(&mut self) { self.state.diff_scroll = self.state.diff_scroll.saturating_sub(1); }
+    fn scroll_diff_down(&mut self) { self.state.diff_scroll = self.state.diff_scroll.saturating_add(1); }
 
     fn select_next(&mut self) {
-        if let Some(repo) = &mut self.state.repo {
-            if repo.selected_file + 1 < repo.files.len() {
-                repo.selected_file += 1;
-            }
-        }
+        if let Some(repo) = &mut self.state.repo { if repo.selected_file + 1 < repo.files.len() { repo.selected_file += 1; } }
         self.refresh_diff();
     }
 
     fn click_file(&mut self, _column: u16, row: u16) {
         let index = row.saturating_sub(4) as usize;
-        if let Some(repo) = &mut self.state.repo {
-            if index < repo.files.len() {
-                repo.selected_file = index;
-                self.refresh_diff();
-            }
-        }
+        if let Some(repo) = &mut self.state.repo { if index < repo.files.len() { repo.selected_file = index; self.refresh_diff(); } }
     }
 
     fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
         self.refresh();
         loop {
             terminal.draw(|frame| ui::draw(frame, &self.state))?;
-
             if event::poll(Duration::from_millis(150))? {
                 match event::read()? {
-                    Event::Key(KeyEvent { code, .. }) => match code {
-                        KeyCode::Char('q') => break,
-                        KeyCode::Char('r') => self.refresh(),
-                        KeyCode::Up => self.select_prev(),
-                        KeyCode::Down => self.select_next(),
-                        KeyCode::PageUp => self.scroll_diff_up(),
-                        KeyCode::PageDown => self.scroll_diff_down(),
-                        KeyCode::Char(' ') => self.toggle_selected_file(),
-                        KeyCode::Tab => {
-                            self.state.tab = match self.state.tab {
-                                Tab::WorkingTree => Tab::History,
-                                Tab::History => Tab::WorkingTree,
-                            }
+                    Event::Key(KeyEvent { code, .. }) => {
+                        if self.state.commit_prompt.is_some() { self.handle_commit_input(code); continue; }
+                        match code {
+                            KeyCode::Char('q') => break,
+                            KeyCode::Char('r') => self.refresh(),
+                            KeyCode::Up => self.select_prev(),
+                            KeyCode::Down => self.select_next(),
+                            KeyCode::PageUp => self.scroll_diff_up(),
+                            KeyCode::PageDown => self.scroll_diff_down(),
+                            KeyCode::Char(' ') => self.toggle_selected_file(),
+                            KeyCode::Char('c') => self.start_commit(CommitTarget::Selected),
+                            KeyCode::Char('f') => self.start_commit(CommitTarget::Current),
+                            KeyCode::Char('a') => self.start_commit(CommitTarget::All),
+                            KeyCode::Tab => self.state.tab = match self.state.tab { Tab::WorkingTree => Tab::History, Tab::History => Tab::WorkingTree },
+                            _ => {}
                         }
-                        _ => {}
-                    },
+                    }
                     Event::Mouse(mouse) => match mouse.kind {
                         MouseEventKind::ScrollUp => self.scroll_diff_up(),
                         MouseEventKind::ScrollDown => self.scroll_diff_down(),

@@ -1,4 +1,6 @@
 use anyhow::Result;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::process::Command;
 
 #[derive(Debug, Clone)]
@@ -72,12 +74,30 @@ impl FossilClient {
         self.run(&["diff", "--", path])
     }
 
-    pub fn add_file(&self, path: &str) -> std::result::Result<String, FossilError> {
-        self.run(&["add", "--", path])
+    pub fn add_files(&self, paths: &[String]) -> std::result::Result<String, FossilError> {
+        let mut args = vec!["add"];
+        for path in paths {
+            args.push(path.as_str());
+        }
+        self.run(&args)
     }
 
-    pub fn forget_file(&self, path: &str) -> std::result::Result<String, FossilError> {
-        self.run(&["forget", "--", path])
+    pub fn commit_paths(
+        &self,
+        paths: &[String],
+        message: &str,
+    ) -> std::result::Result<String, FossilError> {
+        let mut args = vec!["commit"];
+        for path in paths {
+            args.push(path.as_str());
+        }
+        args.push("-m");
+        args.push(message);
+        self.run(&args)
+    }
+
+    pub fn commit_all(&self, message: &str) -> std::result::Result<String, FossilError> {
+        self.run(&["commit", "-m", message])
     }
 
     pub fn cat_file(&self, path: &str) -> std::result::Result<String, FossilError> {
@@ -89,15 +109,19 @@ impl FossilClient {
     }
 
     fn run(&self, args: &[&str]) -> std::result::Result<String, FossilError> {
+        let cmdline = format!("fossil {}", args.join(" "));
         let output = Command::new("fossil")
             .args(args)
             .output()
             .map_err(|e| FossilError::CommandFailed(e.to_string()))?;
 
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        let _ = log_command(&cmdline, output.status.success(), &stdout, &stderr);
+
         if output.status.success() {
-            Ok(String::from_utf8_lossy(&output.stdout).to_string())
+            Ok(stdout)
         } else {
-            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
             let lowered = stderr.to_lowercase();
             if lowered.contains("not within an open checkout")
                 || lowered.contains("not an open checkout")
@@ -111,6 +135,20 @@ impl FossilClient {
             }
         }
     }
+}
+
+fn log_command(cmd: &str, success: bool, stdout: &str, stderr: &str) -> std::io::Result<()> {
+    let mut file = OpenOptions::new().create(true).append(true).open("fossil-debug.log")?;
+    writeln!(file, "=== {} ===", cmd)?;
+    writeln!(file, "status: {}", if success { "ok" } else { "err" })?;
+    if !stdout.trim().is_empty() {
+        writeln!(file, "stdout:\n{}", stdout)?;
+    }
+    if !stderr.trim().is_empty() {
+        writeln!(file, "stderr:\n{}", stderr)?;
+    }
+    writeln!(file)?;
+    Ok(())
 }
 
 fn parse_status(out: &str) -> Vec<FileStatus> {
