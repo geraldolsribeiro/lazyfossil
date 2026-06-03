@@ -62,14 +62,22 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .wrap(Wrap { trim: false })
             }
             Tab::History => {
-                let text = Text::from(
+                let lines = if repo.timeline.is_empty() {
+                    vec![Line::from("No history entries found")] 
+                } else {
                     repo.timeline
                         .iter()
                         .take(12)
-                        .map(|t| Line::from(format!("{} {}", t.rid, t.message)))
-                        .collect::<Vec<_>>(),
-                );
-                Paragraph::new(text)
+                        .flat_map(|t| {
+                            [
+                                Line::from(format!("{} {}", t.rid, t.message)),
+                                Line::from(format!("  {}  {}", t.user, t.date)),
+                                Line::from(""),
+                            ]
+                        })
+                        .collect::<Vec<_>>()
+                };
+                Paragraph::new(Text::from(lines))
                     .block(Block::default().borders(Borders::ALL).title("Details"))
                     .wrap(Wrap { trim: true })
             }
@@ -86,9 +94,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         repo.files
             .get(repo.selected_file)
             .map(|f| format!("q quit  r refresh  tab switch view  | selected: {} [{}]", f.path, f.status))
-            .unwrap_or_else(|| "q quit  r refresh  tab switch view".to_string())
+            .unwrap_or_else(|| "q quit  r refresh  tab switch view  space add/forget".to_string())
     } else {
-        "q quit  r refresh  tab switch view".to_string()
+        "q quit  r refresh  tab switch view  space add/forget".to_string()
     };
 
     let footer = Paragraph::new(footer_text);

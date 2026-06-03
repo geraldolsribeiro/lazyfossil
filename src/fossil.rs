@@ -50,7 +50,17 @@ impl FossilClient {
         self.ensure_repo()?;
         let status = self.run(&["status"])?;
         let extras = self.run(&["extra"]).unwrap_or_default();
-        let timeline = self.run(&["timeline", "-n", "20", "ci"]).unwrap_or_default();
+        let timeline = self
+            .run(&[
+                "timeline",
+                "-n",
+                "20",
+                "-t",
+                "ci",
+                "-F",
+                "%h|%a|%d|%c",
+            ])
+            .unwrap_or_default();
         Ok(RepoState {
             files: merge_files(parse_status(&status), parse_extra(&extras)),
             timeline: parse_timeline(&timeline),
@@ -60,6 +70,14 @@ impl FossilClient {
 
     pub fn diff_for(&self, path: &str) -> std::result::Result<String, FossilError> {
         self.run(&["diff", "--", path])
+    }
+
+    pub fn add_file(&self, path: &str) -> std::result::Result<String, FossilError> {
+        self.run(&["add", "--", path])
+    }
+
+    pub fn forget_file(&self, path: &str) -> std::result::Result<String, FossilError> {
+        self.run(&["forget", "--", path])
     }
 
     pub fn cat_file(&self, path: &str) -> std::result::Result<String, FossilError> {
@@ -128,13 +146,13 @@ fn merge_files(mut status: Vec<FileStatus>, extras: Vec<FileStatus>) -> Vec<File
 fn parse_timeline(out: &str) -> Vec<TimelineEntry> {
     out.lines()
         .filter_map(|line| {
-            let parts: Vec<_> = line.splitn(2, '|').collect();
-            if parts.len() == 2 {
+            let parts: Vec<_> = line.splitn(4, '|').collect();
+            if parts.len() == 4 {
                 Some(TimelineEntry {
                     rid: parts[0].trim().to_string(),
-                    user: String::new(),
-                    message: parts[1].trim().to_string(),
-                    date: String::new(),
+                    user: parts[1].trim().to_string(),
+                    date: parts[2].trim().to_string(),
+                    message: parts[3].trim().to_string(),
                 })
             } else {
                 None

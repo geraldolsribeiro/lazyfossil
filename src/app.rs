@@ -108,6 +108,22 @@ impl App {
         }
     }
 
+    fn toggle_selected_file(&mut self) {
+        let Some(repo) = &self.state.repo else { return; };
+        let Some(file) = repo.files.get(repo.selected_file) else { return; };
+        let path = file.path.clone();
+        let result = match file.status.as_str() {
+            "extra" => self.client.add_file(&path),
+            "added" => self.client.forget_file(&path),
+            _ => return,
+        };
+
+        match result {
+            Ok(_) => self.refresh(),
+            Err(err) => self.state.error = Some(err.to_string()),
+        }
+    }
+
     fn select_prev(&mut self) {
         if let Some(repo) = &mut self.state.repo {
             if repo.selected_file > 0 {
@@ -158,6 +174,7 @@ impl App {
                         KeyCode::Down => self.select_next(),
                         KeyCode::PageUp => self.scroll_diff_up(),
                         KeyCode::PageDown => self.scroll_diff_down(),
+                        KeyCode::Char(' ') => self.toggle_selected_file(),
                         KeyCode::Tab => {
                             self.state.tab = match self.state.tab {
                                 Tab::WorkingTree => Tab::History,
