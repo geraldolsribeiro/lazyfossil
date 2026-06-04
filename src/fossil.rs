@@ -75,11 +75,7 @@ impl FossilClient {
     }
 
     pub fn add_files(&self, paths: &[String]) -> std::result::Result<String, FossilError> {
-        let mut args = vec!["add"];
-        for path in paths {
-            args.push(path.as_str());
-        }
-        self.run(&args)
+        self.run(&build_add_args(paths))
     }
 
     pub fn commit_paths(
@@ -87,13 +83,7 @@ impl FossilClient {
         paths: &[String],
         message: &str,
     ) -> std::result::Result<String, FossilError> {
-        let mut args = vec!["commit"];
-        for path in paths {
-            args.push(path.as_str());
-        }
-        args.push("-m");
-        args.push(message);
-        self.run(&args)
+        self.run(&build_commit_args(paths, message))
     }
 
     pub fn commit_all(&self, message: &str) -> std::result::Result<String, FossilError> {
@@ -135,6 +125,24 @@ impl FossilClient {
             }
         }
     }
+}
+
+fn build_add_args<'a>(paths: &'a [String]) -> Vec<&'a str> {
+    let mut args = vec!["add"];
+    for path in paths {
+        args.push(path.as_str());
+    }
+    args
+}
+
+fn build_commit_args<'a>(paths: &'a [String], message: &'a str) -> Vec<&'a str> {
+    let mut args = vec!["commit"];
+    for path in paths {
+        args.push(path.as_str());
+    }
+    args.push("-m");
+    args.push(message);
+    args
 }
 
 fn log_command(cmd: &str, success: bool, stdout: &str, stderr: &str) -> std::io::Result<()> {
@@ -201,4 +209,48 @@ fn parse_timeline(out: &str) -> Vec<TimelineEntry> {
 
 pub fn _dummy_result() -> Result<()> {
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_status_and_extras_and_merges() {
+        let status = parse_status("EDITED src/lib.rs\nADDED   README.md\nDELETED old.txt\nCHECKED-OUT tracked.txt\nIGNORED nope\n");
+        let extras = parse_extra("tmp.log\n  \nnotes.txt\n");
+        let merged = merge_files(status, extras);
+
+        assert_eq!(merged.len(), 6);
+        assert!(merged.iter().any(|f| f.path == "src/lib.rs" && f.status == "edited"));
+        assert!(merged.iter().any(|f| f.path == "README.md" && f.status == "added"));
+        assert!(merged.iter().any(|f| f.path == "old.txt" && f.status == "deleted"));
+        assert!(merged.iter().any(|f| f.path == "tracked.txt" && f.status == "checked-out"));
+        assert!(merged.iter().any(|f| f.path == "tmp.log" && f.status == "extra"));
+        assert!(merged.iter().any(|f| f.path == "notes.txt" && f.status == "extra"));
+    }
+
+    #[test]
+    fn parses_timeline_format() {
+        let entries = parse_timeline("abc123|Alice|2026-06-04 10:00|Fix bug\nzzz999|Bob|2026-06-04 11:00|Refactor\n");
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0].rid, "abc123");
+        assert_eq!(entries[0].user, "Alice");
+        assert_eq!(entries[0].date, "2026-06-04 10:00");
+        assert_eq!(entries[0].message, "Fix bug");
+    }
+
+    #[test]
+    fn builds_commit_arguments_for_selected_paths() {
+        let paths = vec!["a.txt".to_string(), "b.txt".to_string()];
+        let args = build_commit_args(&paths, "hello");
+        assert_eq!(args, vec!["commit", "a.txt", "b.txt", "-m", "hello"]);
+    }
+
+    #[test]
+    fn builds_add_arguments_for_selected_paths() {
+        let paths = vec!["extra.txt".to_string()];
+        let args = build_add_args(&paths);
+        assert_eq!(args, vec!["add", "extra.txt"]);
+    }
 }

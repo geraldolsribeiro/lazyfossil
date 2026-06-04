@@ -47,7 +47,7 @@ pub struct AppState {
     pub commit_target: CommitTarget,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum CommitTarget {
     Selected,
     Current,
@@ -139,7 +139,7 @@ impl App {
         }
         let Some(repo) = &self.state.repo else { return; };
         let current_path = self.current_file_path();
-        let mut paths = match self.state.commit_target {
+        let paths = match self.state.commit_target {
             CommitTarget::Selected => {
                 if self.state.selected_files.is_empty() {
                     current_path.into_iter().collect::<Vec<_>>()
@@ -243,5 +243,61 @@ impl App {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::fossil::FileStatus;
+
+    fn repo() -> RepoState {
+        RepoState {
+            files: vec![
+                FileStatus { path: "tracked.txt".into(), status: "edited".into() },
+                FileStatus { path: "extra.txt".into(), status: "extra".into() },
+            ],
+            timeline: vec![],
+            selected_file: 0,
+        }
+    }
+
+    #[test]
+    fn toggles_selection_in_memory() {
+        let mut app = App::new();
+        app.state.repo = Some(repo());
+
+        app.toggle_selected_file();
+        assert_eq!(app.state.selected_files, vec!["tracked.txt"]);
+
+        app.toggle_selected_file();
+        assert!(app.state.selected_files.is_empty());
+    }
+
+    #[test]
+    fn current_file_path_tracks_selection() {
+        let mut app = App::new();
+        app.state.repo = Some(repo());
+        assert_eq!(app.current_file_path().as_deref(), Some("tracked.txt"));
+        app.state.repo.as_mut().unwrap().selected_file = 1;
+        assert_eq!(app.current_file_path().as_deref(), Some("extra.txt"));
+    }
+
+    #[test]
+    fn start_commit_initializes_prompt() {
+        let mut app = App::new();
+        app.start_commit(CommitTarget::Selected);
+        assert_eq!(app.state.commit_target, CommitTarget::Selected);
+        assert_eq!(app.state.commit_prompt.as_deref(), Some(""));
+    }
+
+    #[test]
+    fn handles_commit_input_buffer() {
+        let mut app = App::new();
+        app.state.commit_prompt = Some(String::new());
+        app.handle_commit_input(KeyCode::Char('a'));
+        app.handle_commit_input(KeyCode::Char('b'));
+        app.handle_commit_input(KeyCode::Backspace);
+        assert_eq!(app.state.commit_prompt.as_deref(), Some("a"));
     }
 }
