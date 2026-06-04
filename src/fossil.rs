@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::process::Command;
@@ -90,6 +91,11 @@ impl FossilClient {
         self.run(&["commit", "-m", message])
     }
 
+    pub fn ignore_glob(&self, pattern: &str) -> std::result::Result<String, FossilError> {
+        update_ignore_file(pattern).map_err(|e| FossilError::CommandFailed(e.to_string()))?;
+        Ok(format!("ignored {}", pattern))
+    }
+
     pub fn cat_file(&self, path: &str) -> std::result::Result<String, FossilError> {
         self.run(&["cat", path])
     }
@@ -143,6 +149,26 @@ fn build_commit_args<'a>(paths: &'a [String], message: &'a str) -> Vec<&'a str> 
     args.push("-m");
     args.push(message);
     args
+}
+
+fn update_ignore_file(pattern: &str) -> std::io::Result<()> {
+    let dir = ".fossil-settings";
+    let path = ".fossil-settings/ignore-glob";
+    fs::create_dir_all(dir)?;
+    let mut contents = fs::read_to_string(path).unwrap_or_default();
+    let pattern = pattern.trim();
+    if pattern.is_empty() {
+        return Ok(());
+    }
+    if !contents.lines().any(|line| line.trim() == pattern) {
+        if !contents.ends_with('\n') && !contents.is_empty() {
+            contents.push('\n');
+        }
+        contents.push_str(pattern);
+        contents.push('\n');
+        fs::write(path, contents)?;
+    }
+    Ok(())
 }
 
 fn log_command(cmd: &str, success: bool, stdout: &str, stderr: &str) -> std::io::Result<()> {
@@ -252,5 +278,23 @@ mod tests {
         let paths = vec!["extra.txt".to_string()];
         let args = build_add_args(&paths);
         assert_eq!(args, vec!["add", "extra.txt"]);
+    }
+
+    #[test]
+    fn updates_ignore_file_contents() {
+        let dir = std::env::temp_dir().join(format!("lazyfossil-test-{}", std::process::id()));
+        let settings = dir.join(".fossil-settings");
+        std::fs::create_dir_all(&settings).unwrap();
+        let ignore = settings.join("ignore-glob");
+        std::fs::write(&ignore, "*.swp\n").unwrap();
+
+        let old = std::env::current_dir().unwrap();
+        std::env::set_current_dir(&dir).unwrap();
+        update_ignore_file("notes.txt").unwrap();
+        std::env::set_current_dir(old).unwrap();
+
+        let contents = std::fs::read_to_string(ignore).unwrap();
+        assert!(contents.contains("*.swp"));
+        assert!(contents.contains("notes.txt"));
     }
 }

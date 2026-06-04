@@ -45,6 +45,7 @@ pub struct AppState {
     pub selected_files: Vec<String>,
     pub commit_prompt: Option<String>,
     pub commit_target: CommitTarget,
+    pub ignore_prompt: Option<String>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -67,6 +68,7 @@ impl App {
                 selected_files: Vec::new(),
                 commit_prompt: None,
                 commit_target: CommitTarget::Selected,
+                ignore_prompt: None,
             },
         }
     }
@@ -123,6 +125,22 @@ impl App {
         } else {
             self.state.selected_files.push(path);
         }
+    }
+
+    fn start_ignore(&mut self) {
+        self.state.ignore_prompt = self.current_file_path();
+    }
+
+    fn confirm_ignore(&mut self) {
+        let Some(path) = self.state.ignore_prompt.take() else { return; };
+        match self.client.ignore_glob(&path) {
+            Ok(_) => self.refresh(),
+            Err(err) => self.state.error = Some(err.to_string()),
+        }
+    }
+
+    fn cancel_ignore(&mut self) {
+        self.state.ignore_prompt = None;
     }
 
     fn start_commit(&mut self, target: CommitTarget) {
@@ -191,6 +209,14 @@ impl App {
         }
     }
 
+    fn handle_ignore_input(&mut self, code: KeyCode) {
+        match code {
+            KeyCode::Esc | KeyCode::Char('n') | KeyCode::Char('N') => self.cancel_ignore(),
+            KeyCode::Enter | KeyCode::Char('y') | KeyCode::Char('Y') => self.confirm_ignore(),
+            _ => {}
+        }
+    }
+
     fn select_prev(&mut self) {
         if let Some(repo) = &mut self.state.repo { if repo.selected_file > 0 { repo.selected_file -= 1; } }
         self.refresh_diff();
@@ -217,6 +243,7 @@ impl App {
                 match event::read()? {
                     Event::Key(KeyEvent { code, .. }) => {
                         if self.state.commit_prompt.is_some() { self.handle_commit_input(code); continue; }
+                        if self.state.ignore_prompt.is_some() { self.handle_ignore_input(code); continue; }
                         match code {
                             KeyCode::Char('q') => break,
                             KeyCode::Char('r') => self.refresh(),
@@ -228,6 +255,7 @@ impl App {
                             KeyCode::Char('c') => self.start_commit(CommitTarget::Selected),
                             KeyCode::Char('f') => self.start_commit(CommitTarget::Current),
                             KeyCode::Char('a') => self.start_commit(CommitTarget::All),
+                            KeyCode::Char('i') => self.start_ignore(),
                             KeyCode::Tab => self.state.tab = match self.state.tab { Tab::WorkingTree => Tab::History, Tab::History => Tab::WorkingTree },
                             _ => {}
                         }
@@ -299,5 +327,15 @@ mod tests {
         app.handle_commit_input(KeyCode::Char('b'));
         app.handle_commit_input(KeyCode::Backspace);
         assert_eq!(app.state.commit_prompt.as_deref(), Some("a"));
+    }
+
+    #[test]
+    fn start_ignore_and_cancel() {
+        let mut app = App::new();
+        app.state.repo = Some(repo());
+        app.start_ignore();
+        assert_eq!(app.state.ignore_prompt.as_deref(), Some("tracked.txt"));
+        app.handle_ignore_input(KeyCode::Char('n'));
+        assert!(app.state.ignore_prompt.is_none());
     }
 }

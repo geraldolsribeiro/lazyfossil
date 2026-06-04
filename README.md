@@ -2,6 +2,11 @@
 
 A lazygit-inspired terminal UI for Fossil SCM.
 
+## Versioning
+
+This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
+Current version: `0.2.0`.
+
 ## Project goals
 
 - Fast terminal workflow for Fossil checkouts
