@@ -37,7 +37,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             .block(Block::default().borders(Borders::ALL).title("Files"))
     };
 
-    let right = if let Some(repo) = &state.repo {
+    let right = if state.repo.is_some() {
         match state.tab {
             Tab::WorkingTree => {
                 let diff = state.diff.clone().unwrap_or_else(|| "Select a file to view diff".to_string());
@@ -47,10 +47,10 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .wrap(Wrap { trim: false })
             }
             Tab::History => {
-                let lines = if repo.timeline.is_empty() {
+                let lines = if state.history.is_empty() {
                     vec![Line::from("No history entries found")]
                 } else {
-                    repo.timeline.iter().take(12).flat_map(|t| [Line::from(format!("{} {}", t.rid, t.message)), Line::from(format!("  {}  {}", t.user, t.date)), Line::from("")]).collect::<Vec<_>>()
+                    state.history.iter().take(12).flat_map(|t| [Line::from(format!("{} {}", t.rid, t.message)), Line::from(format!("  {}  {}", t.user, t.date)), Line::from("")]).collect::<Vec<_>>()
                 };
                 Paragraph::new(Text::from(lines)).block(Block::default().borders(Borders::ALL).title("Details")).wrap(Wrap { trim: true })
             }

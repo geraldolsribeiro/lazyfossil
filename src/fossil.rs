@@ -53,26 +53,29 @@ impl FossilClient {
         self.ensure_repo()?;
         let status = self.run(&["status"])?;
         let extras = self.run(&["extra"]).unwrap_or_default();
-        let timeline = self
-            .run(&[
-                "timeline",
-                "-n",
-                "20",
-                "-t",
-                "ci",
-                "-F",
-                "%h|%a|%d|%c",
-            ])
-            .unwrap_or_default();
+        let timeline = self.history_timeline(None).unwrap_or_default();
         Ok(RepoState {
             files: merge_files(parse_status(&status), parse_extra(&extras)),
-            timeline: parse_timeline(&timeline),
+            timeline,
             selected_file: 0,
         })
     }
 
     pub fn diff_for(&self, path: &str) -> std::result::Result<String, FossilError> {
         self.run(&["diff", "--", path])
+    }
+
+    pub fn history_timeline(
+        &self,
+        path: Option<&str>,
+    ) -> std::result::Result<Vec<TimelineEntry>, FossilError> {
+        let mut args = vec!["timeline", "-n", "20", "-t", "ci", "-F", "%h|%a|%d|%c"];
+        if let Some(path) = path {
+            args.push("-p");
+            args.push(path);
+        }
+        let output = self.run(&args)?;
+        Ok(parse_timeline(&output))
     }
 
     pub fn add_files(&self, paths: &[String]) -> std::result::Result<String, FossilError> {

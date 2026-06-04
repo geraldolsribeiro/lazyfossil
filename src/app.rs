@@ -46,6 +46,7 @@ pub struct AppState {
     pub commit_prompt: Option<String>,
     pub commit_target: CommitTarget,
     pub ignore_prompt: Option<String>,
+    pub history: Vec<crate::fossil::TimelineEntry>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -69,6 +70,7 @@ impl App {
                 commit_prompt: None,
                 commit_target: CommitTarget::Selected,
                 ignore_prompt: None,
+                history: Vec::new(),
             },
         }
     }
@@ -79,6 +81,7 @@ impl App {
                 self.state.repo = Some(repo);
                 self.state.error = None;
                 self.state.diff_scroll = 0;
+                self.refresh_history();
                 self.refresh_diff();
             }
             Err(FossilError::NotRepository) => {
@@ -89,6 +92,12 @@ impl App {
                 self.state.error = Some("Not inside a Fossil checkout".to_string());
             }
             Err(err) => self.state.error = Some(err.to_string()),
+        }
+    }
+
+    fn refresh_history(&mut self) {
+        if let Some(path) = self.current_file_path() {
+            self.state.history = self.client.history_timeline(Some(&path)).unwrap_or_default();
         }
     }
 
@@ -219,6 +228,7 @@ impl App {
 
     fn select_prev(&mut self) {
         if let Some(repo) = &mut self.state.repo { if repo.selected_file > 0 { repo.selected_file -= 1; } }
+        self.refresh_history();
         self.refresh_diff();
     }
 
@@ -227,12 +237,13 @@ impl App {
 
     fn select_next(&mut self) {
         if let Some(repo) = &mut self.state.repo { if repo.selected_file + 1 < repo.files.len() { repo.selected_file += 1; } }
+        self.refresh_history();
         self.refresh_diff();
     }
 
     fn click_file(&mut self, _column: u16, row: u16) {
         let index = row.saturating_sub(4) as usize;
-        if let Some(repo) = &mut self.state.repo { if index < repo.files.len() { repo.selected_file = index; self.refresh_diff(); } }
+        if let Some(repo) = &mut self.state.repo { if index < repo.files.len() { repo.selected_file = index; self.refresh_history(); self.refresh_diff(); } }
     }
 
     fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
@@ -256,7 +267,10 @@ impl App {
                             KeyCode::Char('f') => self.start_commit(CommitTarget::Current),
                             KeyCode::Char('a') => self.start_commit(CommitTarget::All),
                             KeyCode::Char('i') => self.start_ignore(),
-                            KeyCode::Tab => self.state.tab = match self.state.tab { Tab::WorkingTree => Tab::History, Tab::History => Tab::WorkingTree },
+                            KeyCode::Tab => {
+                                self.state.tab = match self.state.tab { Tab::WorkingTree => Tab::History, Tab::History => Tab::WorkingTree };
+                                self.refresh_history();
+                            }
                             _ => {}
                         }
                     }
