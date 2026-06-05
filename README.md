@@ -1,5 +1,7 @@
 # lazyfossil
 
+[![Multiplatform Release](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml/badge.svg)](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml)
+
 A lazygit-inspired terminal UI for Fossil SCM.
 
 ## Versioning
