@@ -52,7 +52,7 @@ impl FossilClient {
     pub fn repo_state(&self) -> std::result::Result<RepoState, FossilError> {
         self.ensure_repo()?;
         let status = self.run(&["status"])?;
-        let extras = self.run(&["extra"]).unwrap_or_default();
+        let extras = self.run(&["extras", "--dotfiles"]).unwrap_or_default();
         let timeline = self.history_timeline(None).unwrap_or_default();
         Ok(RepoState {
             files: merge_files(parse_status(&status), parse_extra(&extras)),
