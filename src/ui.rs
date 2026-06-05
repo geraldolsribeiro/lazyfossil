@@ -75,9 +75,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
     } else {
         let sel_count = state.selected_files.len();
         let base = if let Some(repo) = &state.repo {
-            repo.files.get(repo.selected_file).map(|f| format!("q quit  r refresh  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view | selected: {} [{}]", f.path, f.status)).unwrap_or_else(|| "q quit  r refresh  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string())
+            repo.files.get(repo.selected_file).map(|f| format!("q quit  r refresh  p/P sync  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view | selected: {} [{}]", f.path, f.status)).unwrap_or_else(|| "q quit  r refresh  p/P sync  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string())
         } else {
-            "q quit  r refresh  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string()
+            "q quit  r refresh  p/P sync  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string()
         };
         Paragraph::new(format!("{}\nselected: {}", base, sel_count)).block(Block::default().borders(Borders::TOP))
     };

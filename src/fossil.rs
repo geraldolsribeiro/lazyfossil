@@ -65,6 +65,10 @@ impl FossilClient {
         self.run(&["diff", "--", path])
     }
 
+    pub fn sync(&self) -> std::result::Result<String, FossilError> {
+        self.run(&["sync"])
+    }
+
     pub fn history_timeline(
         &self,
         path: Option<&str>,

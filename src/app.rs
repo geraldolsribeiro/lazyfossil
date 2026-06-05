@@ -81,8 +81,7 @@ impl App {
                 self.state.repo = Some(repo);
                 self.state.error = None;
                 self.state.diff_scroll = 0;
-                self.refresh_history();
-                self.refresh_diff();
+                self.refresh_views();
             }
             Err(FossilError::NotRepository) => {
                 self.state.repo = None;
@@ -98,6 +97,18 @@ impl App {
     fn refresh_history(&mut self) {
         if let Some(path) = self.current_file_path() {
             self.state.history = self.client.history_timeline(Some(&path)).unwrap_or_default();
+        }
+    }
+
+    fn refresh_views(&mut self) {
+        self.refresh_history();
+        self.refresh_diff();
+    }
+
+    fn sync_with_remote(&mut self) {
+        match self.client.sync() {
+            Ok(_) => self.refresh(),
+            Err(err) => self.state.error = Some(err.to_string()),
         }
     }
 
@@ -228,8 +239,7 @@ impl App {
 
     fn select_prev(&mut self) {
         if let Some(repo) = &mut self.state.repo { if repo.selected_file > 0 { repo.selected_file -= 1; } }
-        self.refresh_history();
-        self.refresh_diff();
+        self.refresh_views();
     }
 
     fn scroll_diff_up(&mut self) { self.state.diff_scroll = self.state.diff_scroll.saturating_sub(1); }
@@ -237,13 +247,12 @@ impl App {
 
     fn select_next(&mut self) {
         if let Some(repo) = &mut self.state.repo { if repo.selected_file + 1 < repo.files.len() { repo.selected_file += 1; } }
-        self.refresh_history();
-        self.refresh_diff();
+        self.refresh_views();
     }
 
     fn click_file(&mut self, _column: u16, row: u16) {
         let index = row.saturating_sub(4) as usize;
-        if let Some(repo) = &mut self.state.repo { if index < repo.files.len() { repo.selected_file = index; self.refresh_history(); self.refresh_diff(); } }
+        if let Some(repo) = &mut self.state.repo { if index < repo.files.len() { repo.selected_file = index; self.refresh_views(); } }
     }
 
     fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
@@ -258,6 +267,7 @@ impl App {
                         match code {
                             KeyCode::Char('q') => break,
                             KeyCode::Char('r') => self.refresh(),
+                            KeyCode::Char('p') | KeyCode::Char('P') => self.sync_with_remote(),
                             KeyCode::Up => self.select_prev(),
                             KeyCode::Down => self.select_next(),
                             KeyCode::PageUp => self.scroll_diff_up(),
