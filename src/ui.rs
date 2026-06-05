@@ -5,9 +5,10 @@ use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap};
 
 pub fn draw(frame: &mut Frame, state: &AppState) {
+    let mut cursor = None;
     let areas = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(3)])
+        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(4)])
         .split(frame.area());
 
     let tabs = Tabs::new(vec!["Working tree", "History"])
@@ -69,9 +70,36 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             CommitTarget::Current => "current",
             CommitTarget::All => "all",
         };
-        Paragraph::new(format!("commit {}: {}", target, msg)).block(Block::default().borders(Borders::ALL))
+        let text = Text::from(vec![
+            Line::from(vec![
+                Span::raw("commit "),
+                Span::styled(target, Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(": "),
+                Span::styled(msg.clone(), Style::default().bg(Color::DarkGray).fg(Color::White)),
+            ]),
+            Line::from(vec![
+                Span::styled("Esc", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+                Span::raw(" cancel · "),
+                Span::styled("Enter", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+                Span::raw(" confirm"),
+            ]),
+        ]);
+        cursor = Some((areas[2].x + 1 + 7 + target.len() as u16 + 2 + msg.chars().count() as u16, areas[2].y + 1));
+        Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Commit"))
     } else if let Some(path) = &state.ignore_prompt {
-        Paragraph::new(format!("ignore {}? [y/N]", path)).block(Block::default().borders(Borders::ALL))
+        let text = Text::from(vec![
+            Line::from(vec![
+                Span::raw("ignore "),
+                Span::styled(path.clone(), Style::default().bg(Color::DarkGray).fg(Color::White)),
+                Span::raw("? [y/N]"),
+            ]),
+            Line::from(vec![
+                Span::styled("Esc", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+                Span::raw(" cancel"),
+            ]),
+        ]);
+        cursor = Some((areas[2].x + 1 + 7 + path.chars().count() as u16, areas[2].y + 1));
+        Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Ignore"))
     } else {
         let sel_count = state.selected_files.len();
         let base = if let Some(repo) = &state.repo {
@@ -83,6 +111,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
     };
 
     frame.render_widget(footer, areas[2]);
+    if let Some((x, y)) = cursor {
+        frame.set_cursor_position((x, y));
+    }
 }
 
 fn color_diff(diff: String) -> Text<'static> {
