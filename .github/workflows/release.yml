@@ -1,9 +1,11 @@
 name: Multiplatform Release
 
-on:
-  push:
-    tags:
-      - 'v*'
+# on:
+#   push:
+#     tags:
+#       - 'v*'
+
+on: push
 
 jobs:
   release:
@@ -14,15 +16,12 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: lazyfossil-linux
             binary_name: lazyfossil
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: lazyfossil-windows.exe
-            binary_name: lazyfossil
+            binary_name: lazyfossil.exe
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: lazyfossil-macos
             binary_name: lazyfossil
 
     steps:
@@ -36,9 +35,10 @@ jobs:
 
     - name: Build Binary
       run: cargo build --release --target ${{ matrix.target }}
-
+        
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.artifact_name }}
+        name: lazyfossil-${{ matrix.os }}
         path: target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+        # target/x86_64-unknown-linux-gnu/release/lazyfossil
