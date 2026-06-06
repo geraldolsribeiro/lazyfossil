@@ -1,14 +1,17 @@
 name: Multiplatform Release
 
-# on:
-#   push:
-#     tags:
-#       - 'v*'
+on:
+  push:
+    tags:
+      - 'v*'
 
-on: push
+# on: push
+
+permissions:
+  contents: write # Grants permission to create GitHub Releases
 
 jobs:
-  release:
+  build:
     name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -35,10 +38,39 @@ jobs:
 
     - name: Build Binary
       run: cargo build --release --target ${{ matrix.target }}
+      # target/x86_64-unknown-linux-gnu/release/lazyfossil
         
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: lazyfossil-${{ matrix.os }}
         path: target/${{ matrix.target }}/release/${{ matrix.binary_name }}
-        # target/x86_64-unknown-linux-gnu/release/lazyfossil
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts/ # Downloads each artifact into its own subfolder
+
+      - name: Stage Release Files
+        run: |
+          mkdir release-files
+          # Flatten the downloaded artifact subdirectories into one folder
+          cp all-artifacts/lazyfossil-ubuntu-latest/lazyfossil      release-files/lazyfossil-linux
+          cp all-artifacts/lazyfossil-windows-latest/lazyfossil.exe release-files/lazyfossil-windows.exe
+          cp all-artifacts/lazyfossil-macos-latest/lazyfossil       release-files/lazyfossil-macos
+
+      - name: Create and Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            release-files/lazyfossil-linux
+            release-files/lazyfossil-windows.exe
+            release-files/lazyfossil-macos
+
