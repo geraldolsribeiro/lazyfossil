@@ -103,6 +103,10 @@ impl FossilClient {
         Ok(format!("ignored {}", pattern))
     }
 
+    pub fn set_binary_glob(&self, pattern: &str) -> std::result::Result<String, FossilError> {
+        self.run(&["settings", "binary-glob", pattern])
+    }
+
     pub fn cat_file(&self, path: &str) -> std::result::Result<String, FossilError> {
         self.run(&["cat", path])
     }
@@ -149,12 +153,10 @@ fn build_add_args<'a>(paths: &'a [String]) -> Vec<&'a str> {
 }
 
 fn build_commit_args<'a>(paths: &'a [String], message: &'a str) -> Vec<&'a str> {
-    let mut args = vec!["commit"];
+    let mut args = vec!["commit", "-m", message];
     for path in paths {
         args.push(path.as_str());
     }
-    args.push("-m");
-    args.push(message);
     args
 }
 
@@ -277,7 +279,7 @@ mod tests {
     fn builds_commit_arguments_for_selected_paths() {
         let paths = vec!["a.txt".to_string(), "b.txt".to_string()];
         let args = build_commit_args(&paths, "hello");
-        assert_eq!(args, vec!["commit", "a.txt", "b.txt", "-m", "hello"]);
+        assert_eq!(args, vec!["commit", "-m", "hello", "a.txt", "b.txt"]);
     }
 
     #[test]

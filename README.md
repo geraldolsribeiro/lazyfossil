@@ -62,5 +62,16 @@ cargo run
 ## Versioning
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
-Current version: `0.3.1`.
+Current version: `0.3.2`.
+
+## Credits
+
+### [pi.dev](https://pi.dev)
+Pi provides the agent harness used to shape and iterate on this project. Its tooling made it possible to refine the TUI, validate changes, and keep the implementation moving quickly.
+
+### [crates.io/crates/lazyfossil](https://crates.io/crates/lazyfossil)
+The crate listing is the distribution point for the Rust application, making the project available to the wider Rust ecosystem and simplifying installation and release management.
+
+### [emojicombos.com/lazyfossil](https://emojicombos.com/lazyfossil)
+This source provided the project logo artwork used in the README and assets, helping give lazyfossil a recognizable visual identity.
 

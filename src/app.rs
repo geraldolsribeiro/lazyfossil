@@ -8,6 +8,9 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::fs;
 use std::io;
+use std::path::Path;
+
+const ASCII_LOGO: &str = include_str!("../doc/images/lazyfossil_logo_01.txt");
 use std::time::Duration;
 
 pub fn run() -> Result<()> {
@@ -117,10 +120,17 @@ impl App {
             if let Some(file) = repo.files.get(repo.selected_file) {
                 self.state.diff_scroll = 0;
                 self.state.diff = Some(match file.status.as_str() {
-                    "extra" => match fs::read_to_string(&file.path) {
-                        Ok(content) => {
-                            if content.trim().is_empty() { format!("Empty file: {}", file.path) } else { content }
-                        }
+                    "extra" => match fs::read(&file.path) {
+                        Ok(bytes) => match String::from_utf8(bytes) {
+                            Ok(content) => {
+                                if content.trim().is_empty() {
+                                    format!("Empty file: {}", file.path)
+                                } else {
+                                    Self::expand_tabs(&content)
+                                }
+                            }
+                            Err(_) => Self::binary_preview_notice(&file.path),
+                        },
                         Err(err) => format!("content error for {}: {}", file.path, err),
                     },
                     _ => match self.client.diff_for(&file.path) {
@@ -132,6 +142,19 @@ impl App {
                 self.state.diff = Some("No file selected".to_string());
             }
         }
+    }
+
+    fn expand_tabs(input: &str) -> String {
+        input.replace('\t', "    ")
+    }
+
+    fn binary_preview_notice(path: &str) -> String {
+        let name = Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path);
+        let logo = ASCII_LOGO.trim_end();
+        format!(
+            "Preview unavailable for {}\n\n{}\n\nOpen externally or use hex view",
+            name, logo
+        )
     }
 
     fn current_file_path(&self) -> Option<String> {
@@ -197,8 +220,16 @@ impl App {
             .iter()
             .filter_map(|path| repo.files.iter().find(|f| &f.path == path && f.status == "extra").map(|f| f.path.clone()))
             .collect();
+        let binary_files: Vec<String> = paths
+            .iter()
+            .filter(|path| is_binary_path(path))
+            .cloned()
+            .collect();
 
         let result = (|| {
+            if !binary_files.is_empty() {
+                self.client.set_binary_glob("*.png,*.jpg,*.jpeg,*.gif,*.ico")?;
+            }
             if !extras.is_empty() {
                 self.client.add_files(&extras)?;
             }
@@ -296,6 +327,11 @@ impl App {
         }
         Ok(())
     }
+}
+
+fn is_binary_path(path: &str) -> bool {
+    let lower = path.to_ascii_lowercase();
+    [".png", ".jpg", ".jpeg", ".gif", ".ico"].iter().any(|ext| lower.ends_with(ext))
 }
 
 #[cfg(test)]

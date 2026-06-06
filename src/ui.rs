@@ -118,7 +118,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
 
 fn color_diff(diff: String) -> Text<'static> {
     Text::from(diff.lines().map(|line| {
-        let style = if line.starts_with("+++") || line.starts_with("---") { Style::default().fg(Color::Blue) }
+        let style = if line.starts_with("Preview unavailable for ") {
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        } else if line.starts_with("+++") || line.starts_with("---") { Style::default().fg(Color::Blue) }
         else if line.starts_with("@@") { Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD) }
         else if line.starts_with('+') { Style::default().fg(Color::Green) }
         else if line.starts_with('-') { Style::default().fg(Color::Red) }
