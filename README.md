@@ -98,7 +98,7 @@ cargo run
 ## Versioning
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
-Current version: `0.3.2`.
+Current version: `0.3.3`.
 
 ## Credits
 
