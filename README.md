@@ -16,15 +16,39 @@ A lazygit-inspired terminal UI for Fossil SCM.
 - Commit subsets of files without a staging area
 - Small, practical MVP first; polish later
 
-## Current features
+## Features
 
+### Repository browsing
 - Fossil checkout detection
 - Working tree file list
 - Diff / details pane
 - Timeline / history view
+- File-history timeline for selected path
+- Hidden-file listing (`extras --dotfiles`)
+- Keyboard and mouse navigation
+
+### Commit and sync flow
 - Temporary commit selection with `Space`
 - Commit selected files, current file, or all files
-- Keyboard and mouse navigation
+- Extra-file commit support
+- Ignore-file editing via `.fossil-settings/ignore-glob`
+- Sync with remote via `p` / `P`
+- Inline commit and ignore prompts
+- Command logging to `fossil-debug.log`
+- Binary file handling before commit via `binary-glob`
+
+### Preview and UI polish
+- Binary preview fallback with friendly notice
+- Tab-expanded text preview (e.g. Makefiles)
+- Footer/input UX improvements
+- Reusable ASCII logo text asset
+
+### Project and release polish
+- Project logo asset and README branding
+- GitHub Actions release workflow fix for Windows executable naming
+- README credits section
+- Cargo package/versioning/release housekeeping
+- Additional test coverage for parsing, selection, and prompts
 
 ## Commit flow
 
@@ -32,10 +56,16 @@ Fossil does not use a staging area.
 Instead, lazyfossil builds commit commands like:
 
 ```bash
-fossil commit file1 file2 file3 -m "commit message"
+fossil commit -m "commit message" file1 file2 file3
 ```
 
 Extra files are added automatically before commit when needed.
+
+Binary files are handled by setting:
+
+```bash
+fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
+```
 
 ## Roadmap
 
@@ -44,6 +74,9 @@ Extra files are added automatically before commit when needed.
 - History timeline basics
 - Temporary selection-based commit flow
 - Inline commit message prompt
+- Ignore-file support
+- Sync support
+- Binary preview fallback
 
 ### Next
 - Commit details and file history in the history pane
@@ -77,4 +110,3 @@ The crate listing is the distribution point for the Rust application, making the
 
 ### [emojicombos.com/lazyfossil](https://emojicombos.com/lazyfossil)
 This source provided the project logo artwork used in the README and assets, helping give lazyfossil a recognizable visual identity.
-
