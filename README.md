@@ -2,12 +2,9 @@
 
 [![Multiplatform Release](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml/badge.svg)](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml)
 
+![lazyfossil logo](doc/images/lazyfossil_logo.png)
+
 A lazygit-inspired terminal UI for Fossil SCM.
-
-## Versioning
-
-This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
-Current version: `0.3.1`.
 
 ## Project goals
 
@@ -61,3 +58,9 @@ cargo build --release
 ```bash
 cargo run
 ```
+
+## Versioning
+
+This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
+Current version: `0.3.1`.
+
