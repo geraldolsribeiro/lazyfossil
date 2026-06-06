@@ -49,7 +49,9 @@ A public Fossil repository will be available soon, likely on <https://chiselapp.
 
 ![Screenshot 01](doc/images/screenshot_01.png)
 
-![Screenshot 02](doc/images/screenshot_01.png)
+![Screenshot 02](doc/images/screenshot_02.png)
+
+![Screenshot 03](doc/images/screenshot_03.png)
 
 ## Features
 
