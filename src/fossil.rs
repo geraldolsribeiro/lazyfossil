@@ -103,6 +103,10 @@ impl FossilClient {
         Ok(format!("ignored {}", pattern))
     }
 
+    pub fn discard_file(&self, path: &str) -> std::result::Result<String, FossilError> {
+        self.run(&["revert", "--", path])
+    }
+
     pub fn set_binary_glob(&self, pattern: &str) -> std::result::Result<String, FossilError> {
         self.run(&["settings", "binary-glob", pattern])
     }
@@ -202,6 +206,8 @@ fn parse_status(out: &str) -> Vec<FileStatus> {
                 .or_else(|| line.strip_prefix("ADDED   ").map(|path| FileStatus { path: path.trim().to_string(), status: "added".to_string() }))
                 .or_else(|| line.strip_prefix("DELETED ").map(|path| FileStatus { path: path.trim().to_string(), status: "deleted".to_string() }))
                 .or_else(|| line.strip_prefix("CHECKED-OUT ").map(|path| FileStatus { path: path.trim().to_string(), status: "checked-out".to_string() }))
+                .or_else(|| line.strip_prefix("CONFLICT ").map(|path| FileStatus { path: path.trim().to_string(), status: "conflict".to_string() }))
+                .or_else(|| line.strip_prefix("MERGE-CONFLICT ").map(|path| FileStatus { path: path.trim().to_string(), status: "conflict".to_string() }))
         })
         .collect()
 }

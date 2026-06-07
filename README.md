@@ -20,11 +20,15 @@ A lazygit-inspired terminal UI for Fossil SCM.
 
 ### From crates.io
 
+This is the preferable way to install and update **lazyfossil**.
+
 **lazyfossil** is written in Rust and can be installed with `cargo`:
 
 ```bash
 cargo install lazyfossil
 ```
+
+Make sure you have **Rust** installed first, if not visit <https://rust-lang.org/tools/install/>.
 
 ### Pre-built binaries
 
@@ -65,13 +69,11 @@ A public Fossil repository will be available soon, likely on <https://chiselapp.
 - Keyboard and mouse navigation
 
 ### Commit and sync flow
-- Temporary commit selection with `Space`
+- Temporary file selection for commit with `Space`
 - Commit selected files, the current file, or all files
-- Extra-file commit support
+- Automatic add extra-file before commit
 - Ignore-file editing via `.fossil-settings/ignore-glob`
-- Sync with the remote via `p` / `P`
-- Inline commit and ignore prompts
-- Command logging to `fossil-debug.log`
+- Sync with the remote via `p` (pull) / `P` (push)
 - Binary-file handling before commit via `binary-glob`
 
 ### Preview and UI polish
@@ -80,16 +82,9 @@ A public Fossil repository will be available soon, likely on <https://chiselapp.
 - Footer and input UX improvements
 - Reusable ASCII logo text asset
 
-### Project and release polish
-- Project logo asset and README branding
-- GitHub Actions release workflow fix for Windows executable naming
-- README credits section
-- Cargo package, versioning, and release housekeeping
-- Additional test coverage for parsing, selection, and prompts
-
 ## Commit flow
 
-Fossil does not use a staging area.
+Fossil does not use a staging area like git does.
 Instead, lazyfossil builds commit commands like:
 
 ```bash
@@ -103,6 +98,31 @@ Binary files are handled by setting:
 ```bash
 fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
 ```
+
+## Keybinds
+
+### Navigation
+- `Up` / `Down`: move between files
+- `Tab`: switch between Working tree and History
+- Mouse click: select a file
+- Mouse wheel: scroll the diff/details pane
+
+### File actions
+- `Space`: toggle the selected file for commit
+- `e`: open the current file in `$EDITOR`
+- `o`: open the current file in the default program for its file type
+- `d`: discard the current file
+- `i`: add the current file to `.fossil-settings/ignore-glob`
+
+### Commit and sync
+- `c`: commit selected files
+- `f`: commit the current file
+- `a`: commit all files
+- `p` / `P`: sync with the remote
+
+### General
+- `r`: refresh
+- `q`: quit
 
 ## Roadmap
 
@@ -120,22 +140,10 @@ fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
 - Footer and status layout polish
 - Better mouse interactions and scrolling
 
-## Build
-
-```bash
-cargo build --release
-```
-
-## Run
-
-```bash
-cargo run
-```
-
 ## Versioning
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
-Current version: `0.3.4`.
+Current version: `0.4.0`.
 
 ## Credits
 
@@ -147,3 +155,5 @@ The crates.io listing is the distribution channel for the Rust application, help
 
 ### [emojicombos.com/lazyfossil](https://emojicombos.com/lazyfossil)
 This source provided the project logo artwork used in the README and assets, giving lazyfossil a recognizable visual identity.
+
+

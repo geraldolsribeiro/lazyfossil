@@ -27,8 +27,8 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         let items: Vec<ListItem> = repo.files.iter().enumerate().map(|(i, f)| {
             let prefix = if i == repo.selected_file { ">" } else { " " };
             let selected = if state.selected_files.iter().any(|p| p == &f.path) { "*" } else { " " };
-            let kind = match f.status.as_str() { "extra" => "E", "edited" => "M", "added" => "A", "deleted" => "D", _ => "?" };
-            ListItem::new(format!("{}{} {} {}", prefix, selected, kind, f.path))
+            let kind = match f.status.as_str() { "extra" => "??", "edited" => "M", "added" => "A", "deleted" => "D", "conflict" => "C", _ => "?" };
+            ListItem::new(format!("{}{} {}", prefix, selected, format!("{} {}", kind, f.path)))
         }).collect();
         List::new(items)
             .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
@@ -103,7 +103,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
     } else {
         let sel_count = state.selected_files.len();
         let base = if let Some(repo) = &state.repo {
-            repo.files.get(repo.selected_file).map(|f| format!("q quit  r refresh  p/P sync  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view | selected: {} [{}]", f.path, f.status)).unwrap_or_else(|| "q quit  r refresh  p/P sync  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string())
+            repo.files.get(repo.selected_file).map(|f| format!("q quit  r refresh  p/P sync  e edit current  d discard current  o open current  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view | selected: {} [{}]", f.path, f.status)).unwrap_or_else(|| "q quit  r refresh  p/P sync  e edit current  d discard current  o open current  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string())
         } else {
             "q quit  r refresh  p/P sync  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string()
         };

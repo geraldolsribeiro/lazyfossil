@@ -3,12 +3,15 @@ use crate::ui;
 use anyhow::Result;
 use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseEventKind};
 use crossterm::execute;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::cursor::MoveTo;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use std::env;
 use std::fs;
 use std::io;
 use std::path::Path;
+use std::process::Command;
 
 const ASCII_LOGO: &str = include_str!("../doc/images/lazyfossil_logo_01.txt");
 use std::time::Duration;
@@ -50,6 +53,7 @@ pub struct AppState {
     pub commit_target: CommitTarget,
     pub ignore_prompt: Option<String>,
     pub history: Vec<crate::fossil::TimelineEntry>,
+    pub redraw: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -74,6 +78,7 @@ impl App {
                 commit_target: CommitTarget::Selected,
                 ignore_prompt: None,
                 history: Vec::new(),
+                redraw: false,
             },
         }
     }
@@ -161,6 +166,47 @@ impl App {
         self.state.repo.as_ref()?.files.get(self.state.repo.as_ref()?.selected_file).map(|f| f.path.clone())
     }
 
+    fn open_in_editor(&mut self) {
+        let Some(path) = self.current_file_path() else { return; };
+        let Some(editor) = env::var("EDITOR").ok() else {
+            self.state.error = Some("EDITOR is not defined".to_string());
+            return;
+        };
+        match self.spawn_external(&editor, &[path.as_str()]) {
+            Ok(_) => { self.refresh(); self.state.redraw = true; }
+            Err(err) => self.state.error = Some(err),
+        }
+    }
+
+    fn discard_current_file(&mut self) {
+        let Some(path) = self.current_file_path() else { return; };
+        match self.client.discard_file(&path) {
+            Ok(_) => { self.refresh(); self.state.redraw = true; }
+            Err(err) => self.state.error = Some(err.to_string()),
+        }
+    }
+
+    fn open_current_file(&mut self) {
+        let Some(path) = self.current_file_path() else { return; };
+        let Some(cmd) = open_command_for(&path) else {
+            self.state.error = Some("No app configured for this file type".to_string());
+            return;
+        };
+        match self.spawn_external(&cmd, &[path.as_str()]) {
+            Ok(_) => { self.refresh(); self.state.redraw = true; }
+            Err(err) => self.state.error = Some(err),
+        }
+    }
+
+    fn spawn_external(&self, program: &str, args: &[&str]) -> std::result::Result<(), String> {
+        disable_raw_mode().map_err(|e| e.to_string())?;
+        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
+        let status = Command::new(program).args(args).status().map_err(|e| e.to_string())?;
+        let _ = execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture);
+        enable_raw_mode().map_err(|e| e.to_string())?;
+        if status.success() { Ok(()) } else { Err(format!("{} exited with {}", program, status)) }
+    }
+
     fn toggle_selected_file(&mut self) {
         let Some(path) = self.current_file_path() else { return; };
         if let Some(pos) = self.state.selected_files.iter().position(|p| p == &path) {
@@ -240,6 +286,7 @@ impl App {
             Ok(_) => {
                 self.state.selected_files.clear();
                 self.refresh();
+                self.state.redraw = true;
             }
             Err(err) => self.state.error = Some(err.to_string()),
         }
@@ -289,6 +336,10 @@ impl App {
     fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
         self.refresh();
         loop {
+            if self.state.redraw {
+                terminal.clear()?;
+                self.state.redraw = false;
+            }
             terminal.draw(|frame| ui::draw(frame, &self.state))?;
             if event::poll(Duration::from_millis(150))? {
                 match event::read()? {
@@ -308,6 +359,9 @@ impl App {
                             KeyCode::Char('f') => self.start_commit(CommitTarget::Current),
                             KeyCode::Char('a') => self.start_commit(CommitTarget::All),
                             KeyCode::Char('i') => self.start_ignore(),
+                            KeyCode::Char('e') => self.open_in_editor(),
+                            KeyCode::Char('d') => self.discard_current_file(),
+                            KeyCode::Char('o') => self.open_current_file(),
                             KeyCode::Tab => {
                                 self.state.tab = match self.state.tab { Tab::WorkingTree => Tab::History, Tab::History => Tab::WorkingTree };
                                 self.refresh_history();
@@ -332,6 +386,17 @@ impl App {
 fn is_binary_path(path: &str) -> bool {
     let lower = path.to_ascii_lowercase();
     [".png", ".jpg", ".jpeg", ".gif", ".ico"].iter().any(|ext| lower.ends_with(ext))
+}
+
+fn open_command_for(path: &str) -> Option<String> {
+    let ext = Path::new(path).extension()?.to_str()?.to_ascii_lowercase();
+    let cmd = match ext.as_str() {
+        "txt" | "md" | "rs" | "toml" | "log" => env::var("EDITOR").unwrap_or_else(|_| "vi".to_string()),
+        "png" | "jpg" | "jpeg" | "gif" | "ico" => "xdg-open".to_string(),
+        "pdf" => "xdg-open".to_string(),
+        _ => "xdg-open".to_string(),
+    };
+    Some(cmd)
 }
 
 #[cfg(test)]
