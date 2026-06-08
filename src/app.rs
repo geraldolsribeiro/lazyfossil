@@ -55,6 +55,7 @@ pub struct AppState {
     pub discard_prompt: Option<String>,
     pub history: Vec<crate::fossil::TimelineEntry>,
     pub redraw: bool,
+    pub show_hex: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -81,6 +82,7 @@ impl App {
                 discard_prompt: None,
                 history: Vec::new(),
                 redraw: false,
+                show_hex: false,
             },
         }
     }
@@ -126,32 +128,39 @@ impl App {
         if let Some(repo) = &self.state.repo {
             if let Some(file) = repo.files.get(repo.selected_file) {
                 self.state.diff_scroll = 0;
-                self.state.diff = Some(match file.status.as_str() {
-                    "extra" | "checked-out" => match fs::read(&file.path) {
-                        Ok(bytes) => match String::from_utf8(bytes) {
-                            Ok(content) => {
-                                if content.trim().is_empty() {
-                                    format!("Empty file: {}", file.path)
-                                } else {
-                                    Self::expand_tabs(&content)
-                                }
-                            }
-                            Err(_) => Self::binary_preview_notice(&file.path),
-                        },
+                self.state.diff = Some(if self.state.show_hex {
+                    match fs::read(&file.path) {
+                        Ok(bytes) => Self::hexdump(&bytes),
                         Err(err) => format!("content error for {}: {}", file.path, err),
-                    },
-                    _ => match self.client.diff_for(&file.path) {
-                        Ok(diff) => if diff.trim().is_empty() {
-                            match fs::read(&file.path) {
-                                Ok(bytes) => match String::from_utf8(bytes) {
-                                    Ok(content) => Self::expand_tabs(&content),
-                                    Err(_) => Self::binary_preview_notice(&file.path),
-                                },
-                                Err(err) => format!("diff/content error for {}: {}", file.path, err),
-                            }
-                        } else { diff },
-                        Err(err) => format!("diff error for {}: {}", file.path, err),
-                    },
+                    }
+                } else {
+                    match file.status.as_str() {
+                        "extra" | "checked-out" => match fs::read(&file.path) {
+                            Ok(bytes) => match String::from_utf8(bytes) {
+                                Ok(content) => {
+                                    if content.trim().is_empty() {
+                                        format!("Empty file: {}", file.path)
+                                    } else {
+                                        Self::expand_tabs(&content)
+                                    }
+                                }
+                                Err(_) => Self::binary_preview_notice(&file.path),
+                            },
+                            Err(err) => format!("content error for {}: {}", file.path, err),
+                        },
+                        _ => match self.client.diff_for(&file.path) {
+                            Ok(diff) => if diff.trim().is_empty() {
+                                match fs::read(&file.path) {
+                                    Ok(bytes) => match String::from_utf8(bytes) {
+                                        Ok(content) => Self::expand_tabs(&content),
+                                        Err(_) => Self::binary_preview_notice(&file.path),
+                                    },
+                                    Err(err) => format!("diff/content error for {}: {}", file.path, err),
+                                }
+                            } else { diff },
+                            Err(err) => format!("diff error for {}: {}", file.path, err),
+                        },
+                    }
                 });
             } else {
                 self.state.diff = Some("No file selected".to_string());
@@ -187,9 +196,31 @@ impl App {
         let name = Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path);
         let logo = ASCII_LOGO.trim_end();
         format!(
-            "Preview unavailable for {}\n\nPress [o] to open externally or [H] for a future hex view\n\n{}",
+            "Preview unavailable for {}\n\nPress [o] to open externally or [H] for hex view\n\n{}",
             name, logo
         )
+    }
+
+    fn hexdump(bytes: &[u8]) -> String {
+        const WIDTH: usize = 16;
+        let mut out = String::new();
+        for (i, chunk) in bytes.chunks(WIDTH).enumerate() {
+            let offset = i * WIDTH;
+            out.push_str(&format!("{:08x}  ", offset));
+            for b in chunk {
+                out.push_str(&format!("{:02x} ", b));
+            }
+            for _ in chunk.len()..WIDTH {
+                out.push_str("   ");
+            }
+            out.push(' ');
+            for b in chunk {
+                let c = if b.is_ascii_graphic() || *b == b' ' { *b as char } else { '.' };
+                out.push(c);
+            }
+            out.push('\n');
+        }
+        out
     }
 
     fn current_file_path(&self) -> Option<String> {
@@ -410,6 +441,7 @@ impl App {
                             KeyCode::Char('e') => self.open_in_editor(),
                             KeyCode::Char('d') => self.start_discard(),
                             KeyCode::Char('o') => self.open_current_file(),
+                            KeyCode::Char('H') => { self.state.show_hex = !self.state.show_hex; self.refresh_views(); },
                             KeyCode::Tab => {
                                 self.state.tab = match self.state.tab { Tab::WorkingTree => Tab::History, Tab::History => Tab::WorkingTree };
                                 self.refresh_history();

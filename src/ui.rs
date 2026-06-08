@@ -142,7 +142,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             Span::styled("o", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
             Span::raw(" open  "),
             Span::styled("d", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::raw(" discard"),
+            Span::raw(" discard  "),
+            Span::styled("H", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" hex"),
         ])];
         if let Some(repo) = &state.repo {
             if let Some(f) = repo.files.get(repo.selected_file) {
@@ -203,13 +205,13 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 
 fn color_diff(diff: String) -> Text<'static> {
     Text::from(diff.lines().map(|line| {
-        if line.starts_with("Press [o] to open externally or [H] for a future hex view") {
+        if line.starts_with("Press [o] to open externally or [H] for hex view") {
             return Line::from(vec![
                 Span::raw("Press "),
                 Span::styled("o", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
                 Span::raw(" to open externally or "),
                 Span::styled("H", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-                Span::raw(" for a future hex view"),
+                Span::raw(" for hex view"),
             ]);
         }
         let style = if line.starts_with("Preview unavailable for ") {
