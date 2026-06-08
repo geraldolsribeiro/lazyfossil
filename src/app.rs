@@ -52,6 +52,7 @@ pub struct AppState {
     pub commit_prompt: Option<String>,
     pub commit_target: CommitTarget,
     pub ignore_prompt: Option<String>,
+    pub discard_prompt: Option<String>,
     pub history: Vec<crate::fossil::TimelineEntry>,
     pub redraw: bool,
 }
@@ -77,6 +78,7 @@ impl App {
                 commit_prompt: None,
                 commit_target: CommitTarget::Selected,
                 ignore_prompt: None,
+                discard_prompt: None,
                 history: Vec::new(),
                 redraw: false,
             },
@@ -198,12 +200,20 @@ impl App {
         }
     }
 
-    fn discard_current_file(&mut self) {
-        let Some(path) = self.current_file_path() else { return; };
+    fn start_discard(&mut self) {
+        self.state.discard_prompt = self.current_file_path();
+    }
+
+    fn confirm_discard(&mut self) {
+        let Some(path) = self.state.discard_prompt.take() else { return; };
         match self.client.discard_file(&path) {
             Ok(_) => { self.refresh(); self.state.redraw = true; }
             Err(err) => self.state.error = Some(err.to_string()),
         }
+    }
+
+    fn cancel_discard(&mut self) {
+        self.state.discard_prompt = None;
     }
 
     fn open_current_file(&mut self) {
@@ -335,6 +345,14 @@ impl App {
         }
     }
 
+    fn handle_discard_input(&mut self, code: KeyCode) {
+        match code {
+            KeyCode::Esc | KeyCode::Char('n') | KeyCode::Char('N') => self.cancel_discard(),
+            KeyCode::Enter | KeyCode::Char('y') | KeyCode::Char('Y') => self.confirm_discard(),
+            _ => {}
+        }
+    }
+
     fn select_prev(&mut self) {
         if let Some(repo) = &mut self.state.repo { if repo.selected_file > 0 { repo.selected_file -= 1; } }
         self.refresh_views();
@@ -366,6 +384,7 @@ impl App {
                     Event::Key(KeyEvent { code, .. }) => {
                         if self.state.commit_prompt.is_some() { self.handle_commit_input(code); continue; }
                         if self.state.ignore_prompt.is_some() { self.handle_ignore_input(code); continue; }
+                        if self.state.discard_prompt.is_some() { self.handle_discard_input(code); continue; }
                         match code {
                             KeyCode::Esc => { self.state.error = None; }
                             KeyCode::Char('q') => break,
@@ -381,7 +400,7 @@ impl App {
                             KeyCode::Char('a') => self.start_commit(CommitTarget::All),
                             KeyCode::Char('i') => self.start_ignore(),
                             KeyCode::Char('e') => self.open_in_editor(),
-                            KeyCode::Char('d') => self.discard_current_file(),
+                            KeyCode::Char('d') => self.start_discard(),
                             KeyCode::Char('o') => self.open_current_file(),
                             KeyCode::Tab => {
                                 self.state.tab = match self.state.tab { Tab::WorkingTree => Tab::History, Tab::History => Tab::WorkingTree };

@@ -91,7 +91,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             Line::from(vec![
                 Span::raw("ignore "),
                 Span::styled(path.clone(), Style::default().bg(Color::DarkGray).fg(Color::White)),
-                Span::raw("? [y/N]"),
+                Span::raw("?"),
             ]),
             Line::from(vec![
                 Span::styled("Esc", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
@@ -100,6 +100,22 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         ]);
         cursor = Some((areas[2].x + 1 + 7 + path.chars().count() as u16, areas[2].y + 1));
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Ignore"))
+    } else if let Some(path) = &state.discard_prompt {
+        let text = Text::from(vec![
+            Line::from(vec![
+                Span::raw("discard changes in "),
+                Span::styled(path.clone(), Style::default().bg(Color::DarkGray).fg(Color::White)),
+                Span::raw("?"),
+            ]),
+            Line::from(vec![
+                Span::styled("Esc", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+                Span::raw(" cancel · "),
+                Span::styled("Enter", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+                Span::raw(" confirm"),
+            ]),
+        ]);
+        cursor = Some((areas[2].x + 1 + 19 + path.chars().count() as u16, areas[2].y + 1));
+        Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Discard"))
     } else {
         let sel_count = state.selected_files.len();
         let base = if let Some(repo) = &state.repo {
