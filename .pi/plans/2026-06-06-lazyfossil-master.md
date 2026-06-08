@@ -15,6 +15,8 @@ Track the full lazyfossil MVP and follow-up work in one consolidated plan.
 - Temporary selection-based commit flow
 - Ignore and sync support
 - Binary preview handling
+- File actions: edit, discard, open externally
+- Conflict handling and missing-file UX
 - README/assets/release polish
 
 ## Completed areas
@@ -52,6 +54,8 @@ Track the full lazyfossil MVP and follow-up work in one consolidated plan.
 - Commit details pane
 - Better history/file history browsing
 - UI polish as needed
+- Optional: rename/missing-file recovery improvements
+- Optional: more tests around status parsing and message styling
 
 ## Status
 Done
