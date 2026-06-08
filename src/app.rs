@@ -150,7 +150,27 @@ impl App {
     }
 
     fn expand_tabs(input: &str) -> String {
-        input.replace('\t', "    ")
+        const TABSTOP: usize = 8;
+        let mut out = String::with_capacity(input.len());
+        let mut col = 0usize;
+        for ch in input.chars() {
+            match ch {
+                '\n' => {
+                    out.push('\n');
+                    col = 0;
+                }
+                '\t' => {
+                    let spaces = TABSTOP - (col % TABSTOP);
+                    out.extend(std::iter::repeat(' ').take(spaces));
+                    col += spaces;
+                }
+                _ => {
+                    out.push(ch);
+                    col += 1;
+                }
+            }
+        }
+        out
     }
 
     fn binary_preview_notice(path: &str) -> String {
