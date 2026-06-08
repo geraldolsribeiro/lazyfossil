@@ -187,7 +187,7 @@ impl App {
         let name = Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path);
         let logo = ASCII_LOGO.trim_end();
         format!(
-            "Preview unavailable for {}\n\n{}\n\nPress [o] to open externally or [H] for a future hex view",
+            "Preview unavailable for {}\n\nPress [o] to open externally or [H] for a future hex view\n\n{}",
             name, logo
         )
     }
