@@ -148,7 +148,7 @@ fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
 ## Versioning
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
-Current version: `0.5.0`.
+Current version: `0.5.1`.
 
 ## Star History
 
