@@ -2,7 +2,7 @@ use crate::app::{AppState, CommitTarget, Tab};
 use ratatui::prelude::*;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap};
+use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap};
 
 pub fn draw(frame: &mut Frame, state: &AppState) {
     let mut cursor = None;
@@ -111,9 +111,40 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
     };
 
     frame.render_widget(footer, areas[2]);
+    if let Some(error) = &state.error {
+        let popup_area = centered_rect(60, 20, frame.area());
+        let popup = Paragraph::new(Text::from(vec![
+            Line::from(error.clone()),
+            Line::from(""),
+            Line::from(Span::styled("Press Esc to dismiss", Style::default().fg(Color::DarkGray))),
+        ]))
+        .block(Block::default().borders(Borders::ALL).title("Warning"))
+        .wrap(Wrap { trim: true });
+        frame.render_widget(Clear, popup_area);
+        frame.render_widget(popup, popup_area);
+    }
     if let Some((x, y)) = cursor {
         frame.set_cursor_position((x, y));
     }
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
 
 fn color_diff(diff: String) -> Text<'static> {

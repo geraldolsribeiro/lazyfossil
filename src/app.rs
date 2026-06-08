@@ -169,7 +169,7 @@ impl App {
     fn open_in_editor(&mut self) {
         let Some(path) = self.current_file_path() else { return; };
         let Some(editor) = env::var("EDITOR").ok() else {
-            self.state.error = Some("EDITOR is not defined".to_string());
+            self.state.error = Some("EDITOR environment variable is not set. Set it before editing, for example: export EDITOR=nvim".to_string());
             return;
         };
         match self.spawn_external(&editor, &[path.as_str()]) {
@@ -347,6 +347,7 @@ impl App {
                         if self.state.commit_prompt.is_some() { self.handle_commit_input(code); continue; }
                         if self.state.ignore_prompt.is_some() { self.handle_ignore_input(code); continue; }
                         match code {
+                            KeyCode::Esc => { self.state.error = None; }
                             KeyCode::Char('q') => break,
                             KeyCode::Char('r') => self.refresh(),
                             KeyCode::Char('p') | KeyCode::Char('P') => self.sync_with_remote(),

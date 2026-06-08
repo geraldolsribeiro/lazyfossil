@@ -156,4 +156,8 @@ The crates.io listing is the distribution channel for the Rust application, help
 ### [emojicombos.com/lazyfossil](https://emojicombos.com/lazyfossil)
 This source provided the project logo artwork used in the README and assets, giving lazyfossil a recognizable visual identity.
 
+## Other fossil companion tools
 
+* fnc - <https://fnc.sh>
+* diesel - <https://github.com/AnotherFoxGuy/diesel-scm>
+* fuel - <https://fuel-scm.org/>
