@@ -252,6 +252,13 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             ),
             Span::raw(" commit  "),
             Span::styled(
+                "a",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(" all/none  "),
+            Span::styled(
                 "p",
                 Style::default()
                     .fg(Color::Yellow)
@@ -383,44 +390,6 @@ fn styled_message_line(line: &str) -> Vec<Span<'static>> {
     // } else {
     //     spans
     // }
-}
-
-fn styled_line(line: &str) -> Vec<Span<'static>> {
-    line.split_whitespace()
-        .flat_map(|tok| {
-            let style = if tok.starts_with('-') {
-                Style::default().fg(Color::Cyan)
-            } else if tok.starts_with('[') && tok.ends_with(']') {
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD)
-            } else if tok.contains('/') || tok.contains('.') {
-                Style::default().fg(Color::Yellow)
-            } else {
-                Style::default().fg(Color::White)
-            };
-            vec![Span::styled(tok.to_string(), style), Span::raw(" ")]
-        })
-        .collect()
-}
-
-fn highlight_filename_in_message(line: &str, filename: &str) -> Vec<Span<'static>> {
-    if let Some(idx) = line.find(filename) {
-        let before = &line[..idx];
-        let after = &line[idx + filename.len()..];
-        vec![
-            Span::raw(before.to_string()),
-            Span::styled(
-                filename.to_string(),
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw(after.to_string()),
-        ]
-    } else {
-        vec![Span::raw(line.to_string())]
-    }
 }
 
 fn color_diff(diff: String) -> Text<'static> {

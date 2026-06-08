@@ -369,6 +369,19 @@ impl App {
         }
     }
 
+    fn toggle_select_all(&mut self) {
+        let Some(repo) = &self.state.repo else {
+            return;
+        };
+        let all_selected = !repo.files.is_empty()
+            && repo.files.iter().all(|f| self.state.selected_files.iter().any(|p| p == &f.path));
+        if all_selected {
+            self.state.selected_files.clear();
+        } else {
+            self.state.selected_files = repo.files.iter().map(|f| f.path.clone()).collect();
+        }
+    }
+
     fn start_ignore(&mut self) {
         self.state.ignore_prompt = self.current_file_path();
     }
@@ -564,7 +577,7 @@ impl App {
                             KeyCode::Char(' ') => self.toggle_selected_file(),
                             KeyCode::Char('c') => self.start_commit(CommitTarget::Selected),
                             KeyCode::Char('f') => self.start_commit(CommitTarget::Current),
-                            KeyCode::Char('a') => self.start_commit(CommitTarget::All),
+                            KeyCode::Char('a') => self.toggle_select_all(),
                             KeyCode::Char('i') => self.start_ignore(),
                             KeyCode::Char('e') => self.open_in_editor(),
                             KeyCode::Char('d') => self.start_discard(),
@@ -648,6 +661,18 @@ mod tests {
         assert_eq!(app.state.selected_files, vec!["tracked.txt"]);
 
         app.toggle_selected_file();
+        assert!(app.state.selected_files.is_empty());
+    }
+
+    #[test]
+    fn toggles_select_all_and_none() {
+        let mut app = App::new();
+        app.state.repo = Some(repo());
+
+        app.toggle_select_all();
+        assert_eq!(app.state.selected_files, vec!["tracked.txt", "extra.txt"]);
+
+        app.toggle_select_all();
         assert!(app.state.selected_files.is_empty());
     }
 
