@@ -235,6 +235,7 @@ fn parse_status(out: &str) -> Vec<FileStatus> {
                 .map(|path| FileStatus { path: path.trim().to_string(), status: "edited".to_string() })
                 .or_else(|| line.strip_prefix("ADDED   ").map(|path| FileStatus { path: path.trim().to_string(), status: "added".to_string() }))
                 .or_else(|| line.strip_prefix("DELETED ").map(|path| FileStatus { path: path.trim().to_string(), status: "deleted".to_string() }))
+                .or_else(|| line.strip_prefix("MISSING ").map(|path| FileStatus { path: path.trim().to_string(), status: "missing".to_string() }))
                 .or_else(|| line.strip_prefix("CHECKED-OUT ").map(|path| FileStatus { path: path.trim().to_string(), status: "checked-out".to_string() }))
                 .or_else(|| line.strip_prefix("CONFLICT ").map(|path| FileStatus { path: path.trim().to_string(), status: "conflict".to_string() }))
                 .or_else(|| line.strip_prefix("MERGE-CONFLICT ").map(|path| FileStatus { path: path.trim().to_string(), status: "conflict".to_string() }))
@@ -300,14 +301,15 @@ mod tests {
     #[test]
     fn parses_status_and_extras_and_merges() {
         let tracked = parse_tracked("src/lib.rs\nREADME.md\nold.txt\ntracked.txt\n");
-        let status = parse_status("EDITED src/lib.rs\nADDED   README.md\nDELETED old.txt\nCHECKED-OUT tracked.txt\nIGNORED nope\n");
+        let status = parse_status("EDITED src/lib.rs\nADDED   README.md\nDELETED old.txt\nMISSING gone.txt\nCHECKED-OUT tracked.txt\nIGNORED nope\n");
         let extras = parse_extra("tmp.log\n  \nnotes.txt\n");
         let merged = merge_files(tracked, status, extras);
 
-        assert_eq!(merged.len(), 6);
+        assert_eq!(merged.len(), 7);
         assert!(merged.iter().any(|f| f.path == "src/lib.rs" && f.status == "edited"));
         assert!(merged.iter().any(|f| f.path == "README.md" && f.status == "added"));
         assert!(merged.iter().any(|f| f.path == "old.txt" && f.status == "deleted"));
+        assert!(merged.iter().any(|f| f.path == "gone.txt" && f.status == "missing"));
         assert!(merged.iter().any(|f| f.path == "tracked.txt" && f.status == "checked-out"));
         assert!(merged.iter().any(|f| f.path == "tmp.log" && f.status == "extra"));
         assert!(merged.iter().any(|f| f.path == "notes.txt" && f.status == "extra"));

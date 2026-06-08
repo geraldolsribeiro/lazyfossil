@@ -128,39 +128,37 @@ impl App {
             if let Some(file) = repo.files.get(repo.selected_file) {
                 self.state.diff_scroll = 0;
                 let path = self.display_path(&file.path);
-                self.state.diff = Some(if self.state.show_hex {
-                    match fs::read(&path) {
+                self.state.diff = Some(match file.status.as_str() {
+                    "extra" | "checked-out" => match fs::read(&path) {
+                        Ok(bytes) => match String::from_utf8(bytes) {
+                            Ok(content) => {
+                                if content.trim().is_empty() {
+                                    format!("Empty file: {}", file.path)
+                                } else {
+                                    Self::expand_tabs(&content)
+                                }
+                            }
+                            Err(_) => Self::binary_preview_notice(&file.path),
+                        },
+                        Err(err) => format!("content error for {}: {}", file.path, err),
+                    },
+                    "missing" => format!("File missing on disk: {}\nUse commit or discard actions from the working tree if needed.", file.path),
+                    _ if self.state.show_hex => match fs::read(&path) {
                         Ok(bytes) => Self::hexdump(&bytes),
                         Err(err) => format!("content error for {}: {}", file.path, err),
-                    }
-                } else {
-                    match file.status.as_str() {
-                        "extra" | "checked-out" => match fs::read(&path) {
-                            Ok(bytes) => match String::from_utf8(bytes) {
-                                Ok(content) => {
-                                    if content.trim().is_empty() {
-                                        format!("Empty file: {}", file.path)
-                                    } else {
-                                        Self::expand_tabs(&content)
-                                    }
-                                }
-                                Err(_) => Self::binary_preview_notice(&file.path),
-                            },
-                            Err(err) => format!("content error for {}: {}", file.path, err),
-                        },
-                        _ => match self.client.diff_for(&file.path) {
-                            Ok(diff) => if diff.trim().is_empty() {
-                                match fs::read(&path) {
-                                    Ok(bytes) => match String::from_utf8(bytes) {
-                                        Ok(content) => Self::expand_tabs(&content),
-                                        Err(_) => Self::binary_preview_notice(&file.path),
-                                    },
-                                    Err(err) => format!("diff/content error for {}: {}", file.path, err),
-                                }
-                            } else { diff },
-                            Err(err) => format!("diff error for {}: {}", file.path, err),
-                        },
-                    }
+                    },
+                    _ => match self.client.diff_for(&file.path) {
+                        Ok(diff) => if diff.trim().is_empty() {
+                            match fs::read(&path) {
+                                Ok(bytes) => match String::from_utf8(bytes) {
+                                    Ok(content) => Self::expand_tabs(&content),
+                                    Err(_) => Self::binary_preview_notice(&file.path),
+                                },
+                                Err(err) => format!("diff/content error for {}: {}", file.path, err),
+                            }
+                        } else { diff },
+                        Err(err) => format!("diff error for {}: {}", file.path, err),
+                    },
                 });
             } else {
                 self.state.diff = Some("No file selected".to_string());

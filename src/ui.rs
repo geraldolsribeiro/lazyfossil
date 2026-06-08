@@ -27,12 +27,14 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         let items: Vec<ListItem> = repo.files.iter().enumerate().map(|(i, f)| {
             let prefix = if i == repo.selected_file { ">" } else { " " };
             let selected = if state.selected_files.iter().any(|p| p == &f.path) { "*" } else { " " };
-            let kind = match f.status.as_str() { "extra" => "??", "edited" => "M", "added" => "A", "deleted" => "D", "conflict" => "C", _ => "✓" };
+            let kind = match f.status.as_str() { "extra" => "??", "edited" => "M", "added" => "A", "deleted" => "D", "missing" => "!", "conflict" => "C", _ => "✓" };
             let mut item = ListItem::new(format!("{}{} {}", prefix, selected, format!("{} {}", kind, f.path)));
             if f.status == "checked-out" {
                 item = item.style(Style::default().fg(Color::Green));
             } else if f.status == "edited" {
                 item = item.style(Style::default().fg(Color::LightRed));
+            } else if f.status == "missing" {
+                item = item.style(Style::default().fg(Color::Red));
             }
             item
         }).collect();
