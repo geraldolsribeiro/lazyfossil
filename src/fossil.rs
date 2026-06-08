@@ -52,10 +52,11 @@ impl FossilClient {
     pub fn repo_state(&self) -> std::result::Result<RepoState, FossilError> {
         self.ensure_repo()?;
         let status = self.run(&["status"])?;
+        let tracked = self.run(&["ls"])?;
         let extras = self.run(&["extras", "--dotfiles"]).unwrap_or_default();
         let timeline = self.history_timeline(None).unwrap_or_default();
         Ok(RepoState {
-            files: merge_files(parse_status(&status), parse_extra(&extras)),
+            files: merge_files(parse_tracked(&tracked), parse_status(&status), parse_extra(&extras)),
             timeline,
             selected_file: 0,
         })
@@ -221,13 +222,24 @@ fn parse_extra(out: &str) -> Vec<FileStatus> {
         .collect()
 }
 
-fn merge_files(mut status: Vec<FileStatus>, extras: Vec<FileStatus>) -> Vec<FileStatus> {
-    for extra in extras {
-        if !status.iter().any(|file| file.path == extra.path) {
-            status.push(extra);
+fn parse_tracked(out: &str) -> Vec<FileStatus> {
+    out.lines()
+        .filter_map(|line| {
+            let path = line.trim();
+            (!path.is_empty()).then(|| FileStatus { path: path.to_string(), status: "checked-out".to_string() })
+        })
+        .collect()
+}
+
+fn merge_files(mut tracked: Vec<FileStatus>, status: Vec<FileStatus>, extras: Vec<FileStatus>) -> Vec<FileStatus> {
+    for file in status.into_iter().chain(extras.into_iter()) {
+        if let Some(existing) = tracked.iter_mut().find(|entry| entry.path == file.path) {
+            existing.status = file.status;
+        } else {
+            tracked.push(file);
         }
     }
-    status
+    tracked
 }
 
 fn parse_timeline(out: &str) -> Vec<TimelineEntry> {
@@ -258,9 +270,10 @@ mod tests {
 
     #[test]
     fn parses_status_and_extras_and_merges() {
+        let tracked = parse_tracked("src/lib.rs\nREADME.md\nold.txt\ntracked.txt\n");
         let status = parse_status("EDITED src/lib.rs\nADDED   README.md\nDELETED old.txt\nCHECKED-OUT tracked.txt\nIGNORED nope\n");
         let extras = parse_extra("tmp.log\n  \nnotes.txt\n");
-        let merged = merge_files(status, extras);
+        let merged = merge_files(tracked, status, extras);
 
         assert_eq!(merged.len(), 6);
         assert!(merged.iter().any(|f| f.path == "src/lib.rs" && f.status == "edited"));

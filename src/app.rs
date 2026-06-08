@@ -127,7 +127,7 @@ impl App {
             if let Some(file) = repo.files.get(repo.selected_file) {
                 self.state.diff_scroll = 0;
                 self.state.diff = Some(match file.status.as_str() {
-                    "extra" => match fs::read(&file.path) {
+                    "extra" | "checked-out" => match fs::read(&file.path) {
                         Ok(bytes) => match String::from_utf8(bytes) {
                             Ok(content) => {
                                 if content.trim().is_empty() {
@@ -141,7 +141,15 @@ impl App {
                         Err(err) => format!("content error for {}: {}", file.path, err),
                     },
                     _ => match self.client.diff_for(&file.path) {
-                        Ok(diff) => if diff.trim().is_empty() { format!("No diff for {}", file.path) } else { diff },
+                        Ok(diff) => if diff.trim().is_empty() {
+                            match fs::read(&file.path) {
+                                Ok(bytes) => match String::from_utf8(bytes) {
+                                    Ok(content) => Self::expand_tabs(&content),
+                                    Err(_) => Self::binary_preview_notice(&file.path),
+                                },
+                                Err(err) => format!("diff/content error for {}: {}", file.path, err),
+                            }
+                        } else { diff },
                         Err(err) => format!("diff error for {}: {}", file.path, err),
                     },
                 });

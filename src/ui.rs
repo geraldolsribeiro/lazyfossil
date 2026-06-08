@@ -27,8 +27,14 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         let items: Vec<ListItem> = repo.files.iter().enumerate().map(|(i, f)| {
             let prefix = if i == repo.selected_file { ">" } else { " " };
             let selected = if state.selected_files.iter().any(|p| p == &f.path) { "*" } else { " " };
-            let kind = match f.status.as_str() { "extra" => "??", "edited" => "M", "added" => "A", "deleted" => "D", "conflict" => "C", _ => "?" };
-            ListItem::new(format!("{}{} {}", prefix, selected, format!("{} {}", kind, f.path)))
+            let kind = match f.status.as_str() { "extra" => "??", "edited" => "M", "added" => "A", "deleted" => "D", "conflict" => "C", _ => "✓" };
+            let mut item = ListItem::new(format!("{}{} {}", prefix, selected, format!("{} {}", kind, f.path)));
+            if f.status == "checked-out" {
+                item = item.style(Style::default().fg(Color::Green));
+            } else if f.status == "edited" {
+                item = item.style(Style::default().fg(Color::LightRed));
+            }
+            item
         }).collect();
         List::new(items)
             .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
