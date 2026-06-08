@@ -4,7 +4,7 @@
 [![Multiplatform Release](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml/badge.svg)](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![GitHub stars](https://img.shields.io/github/stars/geraldolsribeiro/lazyfossil)](https://github.com/geraldolsribeiro/lazyfossil/stargazers)
-[![Crates.io Downloads](https://shields.io)](https://crates.io)
+![Crates.io Total Downloads](https://img.shields.io/crates/d/lazyfossil)
 
 ![lazyfossil logo](doc/images/lazyfossil_logo.png)
 
