@@ -2,6 +2,7 @@ use anyhow::Result;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 #[derive(Debug, Clone)]
@@ -42,15 +43,22 @@ impl std::fmt::Display for FossilError {
 
 impl std::error::Error for FossilError {}
 
-pub struct FossilClient;
+pub struct FossilClient {
+    checkout_root: Option<PathBuf>,
+}
 
 impl FossilClient {
     pub fn new() -> Self {
-        Self
+        Self { checkout_root: None }
     }
 
-    pub fn repo_state(&self) -> std::result::Result<RepoState, FossilError> {
+    pub fn checkout_root_path(&self) -> Option<&Path> {
+        self.checkout_root.as_deref()
+    }
+
+    pub fn repo_state(&mut self) -> std::result::Result<RepoState, FossilError> {
         self.ensure_repo()?;
+        self.checkout_root = Some(self.checkout_root()?);
         let status = self.run(&["status"])?;
         let tracked = self.run(&["ls"])?;
         let extras = self.run(&["extras", "--dotfiles"]).unwrap_or_default();
@@ -74,12 +82,16 @@ impl FossilClient {
         &self,
         path: Option<&str>,
     ) -> std::result::Result<Vec<TimelineEntry>, FossilError> {
-        let mut args = vec!["timeline", "-n", "20", "-t", "ci", "-F", "%h|%a|%d|%c"];
+        let mut args: Vec<String> = vec!["timeline", "-n", "20", "-t", "ci", "-F", "%h|%a|%d|%c"]
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect();
         if let Some(path) = path {
-            args.push("-p");
-            args.push(path);
+            args.push("-p".to_string());
+            args.push(path.to_string());
         }
-        let output = self.run(&args)?;
+        let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+        let output = self.run(&arg_refs)?;
         Ok(parse_timeline(&output))
     }
 
@@ -100,7 +112,8 @@ impl FossilClient {
     }
 
     pub fn ignore_glob(&self, pattern: &str) -> std::result::Result<String, FossilError> {
-        update_ignore_file(pattern).map_err(|e| FossilError::CommandFailed(e.to_string()))?;
+        let root = self.checkout_root.as_deref().ok_or(FossilError::NotRepository)?;
+        update_ignore_file(root, pattern).map_err(|e| FossilError::CommandFailed(e.to_string()))?;
         Ok(format!("ignored {}", pattern))
     }
 
@@ -120,11 +133,27 @@ impl FossilClient {
         self.run(&["info"]).map(|_| ())
     }
 
+    fn checkout_root(&self) -> std::result::Result<PathBuf, FossilError> {
+        let mut command = Command::new("fossil");
+        command.arg("info");
+        let output = command.output().map_err(|e| FossilError::CommandFailed(e.to_string()))?;
+        let info = String::from_utf8_lossy(&output.stdout);
+        for line in info.lines() {
+            if let Some(root) = line.strip_prefix("local-root:") {
+                return Ok(Path::new(root.trim()).to_path_buf());
+            }
+        }
+        Err(FossilError::CommandFailed("unable to determine checkout root".to_string()))
+    }
+
     fn run(&self, args: &[&str]) -> std::result::Result<String, FossilError> {
         let cmdline = format!("fossil {}", args.join(" "));
-        let output = Command::new("fossil")
-            .args(args)
-            .output()
+        let mut command = Command::new("fossil");
+        command.args(args);
+        if let Some(root) = self.checkout_root.as_deref() {
+            command.current_dir(root);
+        }
+        let output = command.output()
             .map_err(|e| FossilError::CommandFailed(e.to_string()))?;
 
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
@@ -165,11 +194,11 @@ fn build_commit_args<'a>(paths: &'a [String], message: &'a str) -> Vec<&'a str> 
     args
 }
 
-fn update_ignore_file(pattern: &str) -> std::io::Result<()> {
-    let dir = ".fossil-settings";
-    let path = ".fossil-settings/ignore-glob";
-    fs::create_dir_all(dir)?;
-    let mut contents = fs::read_to_string(path).unwrap_or_default();
+fn update_ignore_file(root: &Path, pattern: &str) -> std::io::Result<()> {
+    let dir = root.join(".fossil-settings");
+    let path = dir.join("ignore-glob");
+    fs::create_dir_all(&dir)?;
+    let mut contents = fs::read_to_string(&path).unwrap_or_default();
     let pattern = pattern.trim();
     if pattern.is_empty() {
         return Ok(());

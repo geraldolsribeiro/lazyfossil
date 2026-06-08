@@ -127,14 +127,15 @@ impl App {
         if let Some(repo) = &self.state.repo {
             if let Some(file) = repo.files.get(repo.selected_file) {
                 self.state.diff_scroll = 0;
+                let path = self.display_path(&file.path);
                 self.state.diff = Some(if self.state.show_hex {
-                    match fs::read(&file.path) {
+                    match fs::read(&path) {
                         Ok(bytes) => Self::hexdump(&bytes),
                         Err(err) => format!("content error for {}: {}", file.path, err),
                     }
                 } else {
                     match file.status.as_str() {
-                        "extra" | "checked-out" => match fs::read(&file.path) {
+                        "extra" | "checked-out" => match fs::read(&path) {
                             Ok(bytes) => match String::from_utf8(bytes) {
                                 Ok(content) => {
                                     if content.trim().is_empty() {
@@ -149,7 +150,7 @@ impl App {
                         },
                         _ => match self.client.diff_for(&file.path) {
                             Ok(diff) => if diff.trim().is_empty() {
-                                match fs::read(&file.path) {
+                                match fs::read(&path) {
                                     Ok(bytes) => match String::from_utf8(bytes) {
                                         Ok(content) => Self::expand_tabs(&content),
                                         Err(_) => Self::binary_preview_notice(&file.path),
@@ -198,6 +199,14 @@ impl App {
             "Preview unavailable for {}\n\nPress [o] to open externally or [H] for hex view\n\n{}",
             name, logo
         )
+    }
+
+    fn display_path(&self, path: &str) -> std::path::PathBuf {
+        if let Some(root) = self.client.checkout_root_path() {
+            root.join(path)
+        } else {
+            Path::new(path).to_path_buf()
+        }
     }
 
     fn hexdump(bytes: &[u8]) -> String {
@@ -269,7 +278,9 @@ impl App {
     fn spawn_external(&self, program: &str, args: &[&str]) -> std::result::Result<(), String> {
         disable_raw_mode().map_err(|e| e.to_string())?;
         let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
-        let status = Command::new(program).args(args).status().map_err(|e| e.to_string())?;
+        let mut command = Command::new(program);
+        command.args(args);
+        let status = command.status().map_err(|e| e.to_string())?;
         let _ = execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture);
         enable_raw_mode().map_err(|e| e.to_string())?;
         if status.success() { Ok(()) } else { Err(format!("{} exited with {}", program, status)) }

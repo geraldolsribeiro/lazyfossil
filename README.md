@@ -4,6 +4,7 @@
 [![Multiplatform Release](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml/badge.svg)](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![GitHub stars](https://img.shields.io/github/stars/geraldolsribeiro/lazyfossil)](https://github.com/geraldolsribeiro/lazyfossil/stargazers)
+[![Crates.io Downloads](https://shields.io)](https://crates.io)
 
 ![lazyfossil logo](doc/images/lazyfossil_logo.png)
 
@@ -148,6 +149,10 @@ fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
 Current version: `0.5.0`.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/chart?repos=geraldolsribeiro/lazyfossil&type=date&legend=top-left)](https://www.star-history.com/?repos=geraldolsribeiro%2Flazyfossil&type=date&legend=top-left)
 
 ## Credits
 
