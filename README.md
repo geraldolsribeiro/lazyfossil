@@ -61,8 +61,8 @@ A public Fossil repository will be available soon, likely on <https://chiselapp.
 
 ### Repository browsing
 - Fossil checkout detection
-- Working-tree file list
-- Diff/details pane
+- Full project file list plus extra files
+- Diff/details pane with binary-safe preview
 - Timeline/history view
 - File-history timeline for the selected path
 - Hidden-file listing (`extras --dotfiles`)
@@ -71,14 +71,18 @@ A public Fossil repository will be available soon, likely on <https://chiselapp.
 ### Commit and sync flow
 - Temporary file selection for commit with `Space`
 - Commit selected files, the current file, or all files
-- Automatic add extra-file before commit
+- Automatic add extra-files before commit
 - Ignore-file editing via `.fossil-settings/ignore-glob`
 - Sync with the remote via `p` (pull) / `P` (push)
 - Binary-file handling before commit via `binary-glob`
+- Confirmation dialogs for ignore and discard actions
 
 ### Preview and UI polish
 - Binary preview fallback with a friendly notice
+- `o` to open binaries externally
+- `H` hex dump toggle for binary files
 - Tab-expanded text previews (for example, Makefiles)
+- Compact shortcut status line
 - Footer and input UX improvements
 - Reusable ASCII logo text asset
 
@@ -143,7 +147,7 @@ fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
 ## Versioning
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
-Current version: `0.4.0`.
+Current version: `0.5.0`.
 
 ## Credits
 
