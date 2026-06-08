@@ -153,9 +153,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 lines.push(Line::from(vec![
                     Span::styled("selected", Style::default().fg(Color::DarkGray)),
                     Span::raw(": "),
-                    Span::styled(f.path.clone(), Style::default().fg(Color::White)),
+                    Span::styled(f.path.clone(), Style::default().fg(Color::Yellow)),
                     Span::raw(" ["),
-                    Span::styled(f.status.clone(), Style::default().fg(Color::DarkGray)),
+                    Span::styled(f.status.clone(), Style::default().fg(Color::Cyan)),
                     Span::raw("]"),
                 ]));
             }
@@ -171,11 +171,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
     frame.render_widget(footer, areas[2]);
     if let Some(error) = &state.error {
         let popup_area = centered_rect(60, 20, frame.area());
-        let popup = Paragraph::new(Text::from(vec![
-            Line::from(error.clone()),
-            Line::from(""),
-            Line::from(Span::styled("Press Esc to dismiss", Style::default().fg(Color::DarkGray))),
-        ]))
+        let popup = Paragraph::new(styled_message(error))
         .block(Block::default().borders(Borders::ALL).title("Warning"))
         .wrap(Wrap { trim: true });
         frame.render_widget(Clear, popup_area);
@@ -203,6 +199,56 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+fn styled_message(msg: &str) -> Text<'static> {
+    let mut lines = Vec::new();
+    for line in msg.lines() {
+        if line.starts_with("File missing on disk") {
+            lines.push(Line::from(vec![
+                Span::styled("File missing on disk", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+            ]));
+        } else if line.starts_with("Possible rename detected") {
+            lines.push(Line::from(vec![
+                Span::styled("Possible rename detected", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            ]));
+        } else if line.starts_with("  ") {
+            lines.push(Line::from(highlight_filename_in_message(line, line.trim())));
+        } else {
+            lines.push(Line::from(styled_line(line)));
+        }
+    }
+    lines.push(Line::from(Span::styled("Press Esc to dismiss", Style::default().fg(Color::DarkGray))));
+    Text::from(lines)
+}
+
+fn styled_line(line: &str) -> Vec<Span<'static>> {
+    line.split_whitespace().flat_map(|tok| {
+        let style = if tok.starts_with('-') {
+            Style::default().fg(Color::Cyan)
+        } else if tok.starts_with('[') && tok.ends_with(']') {
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        } else if tok.contains('/') || tok.contains('.') {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default().fg(Color::White)
+        };
+        vec![Span::styled(tok.to_string(), style), Span::raw(" ")]
+    }).collect()
+}
+
+fn highlight_filename_in_message(line: &str, filename: &str) -> Vec<Span<'static>> {
+    if let Some(idx) = line.find(filename) {
+        let before = &line[..idx];
+        let after = &line[idx + filename.len()..];
+        vec![
+            Span::raw(before.to_string()),
+            Span::styled(filename.to_string(), Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(after.to_string()),
+        ]
+    } else {
+        vec![Span::raw(line.to_string())]
+    }
 }
 
 fn color_diff(diff: String) -> Text<'static> {

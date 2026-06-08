@@ -142,7 +142,19 @@ impl App {
                         },
                         Err(err) => format!("content error for {}: {}", file.path, err),
                     },
-                    "missing" => format!("File missing on disk: {}\nUse commit or discard actions from the working tree if needed.", file.path),
+                    "missing" => {
+                        if let Some(renamed) = self.find_renamed_extra(&file.path) {
+                            format!(
+                                "File missing on disk\n  {}\nPossible rename detected\n  extra file: {}",
+                                file.path, renamed
+                            )
+                        } else {
+                            format!(
+                                "File missing on disk\n  {}\nUse commit or discard actions from the working tree if needed.",
+                                file.path
+                            )
+                        }
+                    },
                     _ if self.state.show_hex => match fs::read(&path) {
                         Ok(bytes) => Self::hexdump(&bytes),
                         Err(err) => format!("content error for {}: {}", file.path, err),
@@ -205,6 +217,20 @@ impl App {
         } else {
             Path::new(path).to_path_buf()
         }
+    }
+
+    fn find_renamed_extra(&self, missing_path: &str) -> Option<String> {
+        let repo = self.state.repo.as_ref()?;
+        let original = self.client.cat_file(missing_path).ok()?.into_bytes();
+        for file in repo.files.iter().filter(|f| f.status == "extra") {
+            let path = self.display_path(&file.path);
+            if let Ok(bytes) = fs::read(&path) {
+                if bytes == original {
+                    return Some(file.path.clone());
+                }
+            }
+        }
+        None
     }
 
     fn hexdump(bytes: &[u8]) -> String {
