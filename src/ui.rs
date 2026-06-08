@@ -124,12 +124,44 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Discard"))
     } else {
         let sel_count = state.selected_files.len();
-        let base = if let Some(repo) = &state.repo {
-            repo.files.get(repo.selected_file).map(|f| format!("q quit  r refresh  p/P sync  e edit current  d discard current  o open current  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view | selected: {} [{}]", f.path, f.status)).unwrap_or_else(|| "q quit  r refresh  p/P sync  e edit current  d discard current  o open current  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string())
-        } else {
-            "q quit  r refresh  p/P sync  space toggle  c commit selected  f commit file  a commit all  i ignore  tab switch view".to_string()
-        };
-        Paragraph::new(format!("{}\nselected: {}", base, sel_count)).block(Block::default().borders(Borders::TOP))
+        let mut lines = vec![Line::from(vec![
+            Span::styled("q", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" quit  "),
+            Span::styled("r", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" refresh  "),
+            Span::styled("Space", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" select  "),
+            Span::styled("i", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" ignore  "),
+            Span::styled("c", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" commit  "),
+            Span::styled("p", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" pull  "),
+            Span::styled("e", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" edit  "),
+            Span::styled("o", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" open  "),
+            Span::styled("d", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(" discard"),
+        ])];
+        if let Some(repo) = &state.repo {
+            if let Some(f) = repo.files.get(repo.selected_file) {
+                lines.push(Line::from(vec![
+                    Span::styled("selected", Style::default().fg(Color::DarkGray)),
+                    Span::raw(": "),
+                    Span::styled(f.path.clone(), Style::default().fg(Color::White)),
+                    Span::raw(" ["),
+                    Span::styled(f.status.clone(), Style::default().fg(Color::DarkGray)),
+                    Span::raw("]"),
+                ]));
+            }
+        }
+        lines.push(Line::from(vec![
+            Span::styled("selected files", Style::default().fg(Color::DarkGray)),
+            Span::raw(": "),
+            Span::styled(sel_count.to_string(), Style::default().fg(Color::White)),
+        ]));
+        Paragraph::new(Text::from(lines)).block(Block::default().borders(Borders::TOP))
     };
 
     frame.render_widget(footer, areas[2]);
