@@ -1,9 +1,13 @@
 use crate::fossil::{FossilClient, FossilError, RepoState};
 use crate::ui;
 use anyhow::Result;
-use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseEventKind};
+use crossterm::event::{
+    self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseEventKind,
+};
 use crossterm::execute;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::env;
@@ -25,7 +29,11 @@ pub fn run() -> Result<()> {
     let res = App::new().run(&mut terminal);
 
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
     terminal.show_cursor()?;
     res
 }
@@ -107,7 +115,10 @@ impl App {
 
     fn refresh_history(&mut self) {
         if let Some(path) = self.current_file_path() {
-            self.state.history = self.client.history_timeline(Some(&path)).unwrap_or_default();
+            self.state.history = self
+                .client
+                .history_timeline(Some(&path))
+                .unwrap_or_default();
         }
     }
 
@@ -145,30 +156,36 @@ impl App {
                     "missing" => {
                         if let Some(renamed) = self.find_renamed_extra(&file.path) {
                             format!(
-                                "File missing on disk\n  {}\nPossible rename detected\n  extra file: {}",
+                                "Missing file [[{}]]\nPossible renamed to [[{}]]",
                                 file.path, renamed
                             )
                         } else {
                             format!(
-                                "File missing on disk\n  {}\nUse commit or discard actions from the working tree if needed.",
+                                "Missing file [[{}]]\nUse commit or discard actions from the working tree if needed.",
                                 file.path
                             )
                         }
-                    },
+                    }
                     _ if self.state.show_hex => match fs::read(&path) {
                         Ok(bytes) => Self::hexdump(&bytes),
                         Err(err) => format!("content error for {}: {}", file.path, err),
                     },
                     _ => match self.client.diff_for(&file.path) {
-                        Ok(diff) => if diff.trim().is_empty() {
-                            match fs::read(&path) {
-                                Ok(bytes) => match String::from_utf8(bytes) {
-                                    Ok(content) => Self::expand_tabs(&content),
-                                    Err(_) => Self::binary_preview_notice(&file.path),
-                                },
-                                Err(err) => format!("diff/content error for {}: {}", file.path, err),
+                        Ok(diff) => {
+                            if diff.trim().is_empty() {
+                                match fs::read(&path) {
+                                    Ok(bytes) => match String::from_utf8(bytes) {
+                                        Ok(content) => Self::expand_tabs(&content),
+                                        Err(_) => Self::binary_preview_notice(&file.path),
+                                    },
+                                    Err(err) => {
+                                        format!("diff/content error for {}: {}", file.path, err)
+                                    }
+                                }
+                            } else {
+                                diff
                             }
-                        } else { diff },
+                        }
                         Err(err) => format!("diff error for {}: {}", file.path, err),
                     },
                 });
@@ -203,7 +220,10 @@ impl App {
     }
 
     fn binary_preview_notice(path: &str) -> String {
-        let name = Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path);
+        let name = Path::new(path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or(path);
         let logo = ASCII_LOGO.trim_end();
         format!(
             "Preview unavailable for {}\n\nPress [o] to open externally or [H] for hex view\n\n{}",
@@ -247,7 +267,11 @@ impl App {
             }
             out.push(' ');
             for b in chunk {
-                let c = if b.is_ascii_graphic() || *b == b' ' { *b as char } else { '.' };
+                let c = if b.is_ascii_graphic() || *b == b' ' {
+                    *b as char
+                } else {
+                    '.'
+                };
                 out.push(c);
             }
             out.push('\n');
@@ -256,17 +280,27 @@ impl App {
     }
 
     fn current_file_path(&self) -> Option<String> {
-        self.state.repo.as_ref()?.files.get(self.state.repo.as_ref()?.selected_file).map(|f| f.path.clone())
+        self.state
+            .repo
+            .as_ref()?
+            .files
+            .get(self.state.repo.as_ref()?.selected_file)
+            .map(|f| f.path.clone())
     }
 
     fn open_in_editor(&mut self) {
-        let Some(path) = self.current_file_path() else { return; };
+        let Some(path) = self.current_file_path() else {
+            return;
+        };
         let Some(editor) = env::var("EDITOR").ok() else {
             self.state.error = Some("EDITOR environment variable is not set. Set it before editing, for example: export EDITOR=nvim".to_string());
             return;
         };
         match self.spawn_external(&editor, &[path.as_str()]) {
-            Ok(_) => { self.refresh(); self.state.redraw = true; }
+            Ok(_) => {
+                self.refresh();
+                self.state.redraw = true;
+            }
             Err(err) => self.state.error = Some(err),
         }
     }
@@ -276,9 +310,14 @@ impl App {
     }
 
     fn confirm_discard(&mut self) {
-        let Some(path) = self.state.discard_prompt.take() else { return; };
+        let Some(path) = self.state.discard_prompt.take() else {
+            return;
+        };
         match self.client.discard_file(&path) {
-            Ok(_) => { self.refresh(); self.state.redraw = true; }
+            Ok(_) => {
+                self.refresh();
+                self.state.redraw = true;
+            }
             Err(err) => self.state.error = Some(err.to_string()),
         }
     }
@@ -288,13 +327,18 @@ impl App {
     }
 
     fn open_current_file(&mut self) {
-        let Some(path) = self.current_file_path() else { return; };
+        let Some(path) = self.current_file_path() else {
+            return;
+        };
         let Some(cmd) = open_command_for(&path) else {
             self.state.error = Some("No app configured for this file type".to_string());
             return;
         };
         match self.spawn_external(&cmd, &[path.as_str()]) {
-            Ok(_) => { self.refresh(); self.state.redraw = true; }
+            Ok(_) => {
+                self.refresh();
+                self.state.redraw = true;
+            }
             Err(err) => self.state.error = Some(err),
         }
     }
@@ -307,11 +351,17 @@ impl App {
         let status = command.status().map_err(|e| e.to_string())?;
         let _ = execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture);
         enable_raw_mode().map_err(|e| e.to_string())?;
-        if status.success() { Ok(()) } else { Err(format!("{} exited with {}", program, status)) }
+        if status.success() {
+            Ok(())
+        } else {
+            Err(format!("{} exited with {}", program, status))
+        }
     }
 
     fn toggle_selected_file(&mut self) {
-        let Some(path) = self.current_file_path() else { return; };
+        let Some(path) = self.current_file_path() else {
+            return;
+        };
         if let Some(pos) = self.state.selected_files.iter().position(|p| p == &path) {
             self.state.selected_files.remove(pos);
         } else {
@@ -324,7 +374,9 @@ impl App {
     }
 
     fn confirm_ignore(&mut self) {
-        let Some(path) = self.state.ignore_prompt.take() else { return; };
+        let Some(path) = self.state.ignore_prompt.take() else {
+            return;
+        };
         match self.client.ignore_glob(&path) {
             Ok(_) => self.refresh(),
             Err(err) => self.state.error = Some(err.to_string()),
@@ -341,13 +393,17 @@ impl App {
     }
 
     fn submit_commit(&mut self) {
-        let Some(message) = self.state.commit_prompt.take() else { return; };
+        let Some(message) = self.state.commit_prompt.take() else {
+            return;
+        };
         let message = message.trim().to_string();
         if message.is_empty() {
             self.state.error = Some("Commit message cannot be empty".to_string());
             return;
         }
-        let Some(repo) = &self.state.repo else { return; };
+        let Some(repo) = &self.state.repo else {
+            return;
+        };
         let current_path = self.current_file_path();
         let paths = match self.state.commit_target {
             CommitTarget::Selected => {
@@ -367,7 +423,12 @@ impl App {
 
         let extras: Vec<String> = paths
             .iter()
-            .filter_map(|path| repo.files.iter().find(|f| &f.path == path && f.status == "extra").map(|f| f.path.clone()))
+            .filter_map(|path| {
+                repo.files
+                    .iter()
+                    .find(|f| &f.path == path && f.status == "extra")
+                    .map(|f| f.path.clone())
+            })
             .collect();
         let binary_files: Vec<String> = paths
             .iter()
@@ -377,7 +438,8 @@ impl App {
 
         let result = (|| {
             if !binary_files.is_empty() {
-                self.client.set_binary_glob("*.png,*.jpg,*.jpeg,*.gif,*.ico")?;
+                self.client
+                    .set_binary_glob("*.png,*.jpg,*.jpeg,*.gif,*.ico")?;
             }
             if !extras.is_empty() {
                 self.client.add_files(&extras)?;
@@ -400,11 +462,15 @@ impl App {
     }
 
     fn handle_commit_input(&mut self, code: KeyCode) {
-        let Some(buf) = self.state.commit_prompt.as_mut() else { return; };
+        let Some(buf) = self.state.commit_prompt.as_mut() else {
+            return;
+        };
         match code {
             KeyCode::Esc => self.cancel_commit(),
             KeyCode::Enter => self.submit_commit(),
-            KeyCode::Backspace => { buf.pop(); }
+            KeyCode::Backspace => {
+                buf.pop();
+            }
             KeyCode::Char(c) => buf.push(c),
             _ => {}
         }
@@ -427,21 +493,38 @@ impl App {
     }
 
     fn select_prev(&mut self) {
-        if let Some(repo) = &mut self.state.repo { if repo.selected_file > 0 { repo.selected_file -= 1; } }
+        if let Some(repo) = &mut self.state.repo {
+            if repo.selected_file > 0 {
+                repo.selected_file -= 1;
+            }
+        }
         self.refresh_views();
     }
 
-    fn scroll_diff_up(&mut self) { self.state.diff_scroll = self.state.diff_scroll.saturating_sub(1); }
-    fn scroll_diff_down(&mut self) { self.state.diff_scroll = self.state.diff_scroll.saturating_add(1); }
+    fn scroll_diff_up(&mut self) {
+        self.state.diff_scroll = self.state.diff_scroll.saturating_sub(1);
+    }
+    fn scroll_diff_down(&mut self) {
+        self.state.diff_scroll = self.state.diff_scroll.saturating_add(1);
+    }
 
     fn select_next(&mut self) {
-        if let Some(repo) = &mut self.state.repo { if repo.selected_file + 1 < repo.files.len() { repo.selected_file += 1; } }
+        if let Some(repo) = &mut self.state.repo {
+            if repo.selected_file + 1 < repo.files.len() {
+                repo.selected_file += 1;
+            }
+        }
         self.refresh_views();
     }
 
     fn click_file(&mut self, _column: u16, row: u16) {
         let index = row.saturating_sub(4) as usize;
-        if let Some(repo) = &mut self.state.repo { if index < repo.files.len() { repo.selected_file = index; self.refresh_views(); } }
+        if let Some(repo) = &mut self.state.repo {
+            if index < repo.files.len() {
+                repo.selected_file = index;
+                self.refresh_views();
+            }
+        }
     }
 
     fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
@@ -455,11 +538,22 @@ impl App {
             if event::poll(Duration::from_millis(150))? {
                 match event::read()? {
                     Event::Key(KeyEvent { code, .. }) => {
-                        if self.state.commit_prompt.is_some() { self.handle_commit_input(code); continue; }
-                        if self.state.ignore_prompt.is_some() { self.handle_ignore_input(code); continue; }
-                        if self.state.discard_prompt.is_some() { self.handle_discard_input(code); continue; }
+                        if self.state.commit_prompt.is_some() {
+                            self.handle_commit_input(code);
+                            continue;
+                        }
+                        if self.state.ignore_prompt.is_some() {
+                            self.handle_ignore_input(code);
+                            continue;
+                        }
+                        if self.state.discard_prompt.is_some() {
+                            self.handle_discard_input(code);
+                            continue;
+                        }
                         match code {
-                            KeyCode::Esc => { self.state.error = None; }
+                            KeyCode::Esc => {
+                                self.state.error = None;
+                            }
                             KeyCode::Char('q') => break,
                             KeyCode::Char('r') => self.refresh(),
                             KeyCode::Char('p') | KeyCode::Char('P') => self.sync_with_remote(),
@@ -475,9 +569,15 @@ impl App {
                             KeyCode::Char('e') => self.open_in_editor(),
                             KeyCode::Char('d') => self.start_discard(),
                             KeyCode::Char('o') => self.open_current_file(),
-                            KeyCode::Char('H') => { self.state.show_hex = !self.state.show_hex; self.refresh_views(); },
+                            KeyCode::Char('H') => {
+                                self.state.show_hex = !self.state.show_hex;
+                                self.refresh_views();
+                            }
                             KeyCode::Tab => {
-                                self.state.tab = match self.state.tab { Tab::WorkingTree => Tab::History, Tab::History => Tab::WorkingTree };
+                                self.state.tab = match self.state.tab {
+                                    Tab::WorkingTree => Tab::History,
+                                    Tab::History => Tab::WorkingTree,
+                                };
                                 self.refresh_history();
                             }
                             _ => {}
@@ -499,13 +599,17 @@ impl App {
 
 fn is_binary_path(path: &str) -> bool {
     let lower = path.to_ascii_lowercase();
-    [".png", ".jpg", ".jpeg", ".gif", ".ico"].iter().any(|ext| lower.ends_with(ext))
+    [".png", ".jpg", ".jpeg", ".gif", ".ico"]
+        .iter()
+        .any(|ext| lower.ends_with(ext))
 }
 
 fn open_command_for(path: &str) -> Option<String> {
     let ext = Path::new(path).extension()?.to_str()?.to_ascii_lowercase();
     let cmd = match ext.as_str() {
-        "txt" | "md" | "rs" | "toml" | "log" => env::var("EDITOR").unwrap_or_else(|_| "vi".to_string()),
+        "txt" | "md" | "rs" | "toml" | "log" => {
+            env::var("EDITOR").unwrap_or_else(|_| "vi".to_string())
+        }
         "png" | "jpg" | "jpeg" | "gif" | "ico" => "xdg-open".to_string(),
         "pdf" => "xdg-open".to_string(),
         _ => "xdg-open".to_string(),
@@ -521,8 +625,14 @@ mod tests {
     fn repo() -> RepoState {
         RepoState {
             files: vec![
-                FileStatus { path: "tracked.txt".into(), status: "edited".into() },
-                FileStatus { path: "extra.txt".into(), status: "extra".into() },
+                FileStatus {
+                    path: "tracked.txt".into(),
+                    status: "edited".into(),
+                },
+                FileStatus {
+                    path: "extra.txt".into(),
+                    status: "extra".into(),
+                },
             ],
             timeline: vec![],
             selected_file: 0,
