@@ -129,22 +129,14 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .wrap(Wrap { trim: true })
             }
             Tab::Timeline => {
-                let entry = state
-                    .repo
-                    .as_ref()
-                    .and_then(|repo| repo.timeline.get(state.timeline_selected));
-                let text = if let Some(t) = entry {
-                    Text::from(vec![
-                        Line::from(format!("{}", t.rid)),
-                        Line::from(format!("{}", t.message)),
-                        Line::from(format!("{}  {}", t.user, t.date)),
-                    ])
-                } else {
-                    Text::from("No timeline entry selected")
-                };
-                Paragraph::new(text)
+                let diff = state
+                    .timeline_diff
+                    .clone()
+                    .unwrap_or_else(|| "No timeline diff available".to_string());
+                Paragraph::new(color_diff(diff))
+                    .scroll((state.diff_scroll, 0))
                     .block(Block::default().borders(Borders::ALL).title("Details"))
-                    .wrap(Wrap { trim: true })
+                    .wrap(Wrap { trim: false })
             }
         }
     } else {
@@ -225,16 +217,18 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             key_span("H", Color::Yellow),
             Span::raw(" hex"),
         ])];
-        if let Some(repo) = &state.repo {
-            if let Some(f) = repo.files.get(repo.selected_file) {
-                lines.push(Line::from(vec![
-                    Span::styled("selected", Style::default().fg(Color::DarkGray)),
-                    Span::raw(": "),
-                    Span::styled(f.path.clone(), Style::default().fg(Color::Yellow)),
-                    Span::raw(" ["),
-                    Span::styled(f.status.clone(), Style::default().fg(Color::Cyan)),
-                    Span::raw("]"),
-                ]));
+        if state.tab != Tab::Timeline {
+            if let Some(repo) = &state.repo {
+                if let Some(f) = repo.files.get(repo.selected_file) {
+                    lines.push(Line::from(vec![
+                        Span::styled("selected", Style::default().fg(Color::DarkGray)),
+                        Span::raw(": "),
+                        Span::styled(f.path.clone(), Style::default().fg(Color::Yellow)),
+                        Span::raw(" ["),
+                        Span::styled(f.status.clone(), Style::default().fg(Color::Cyan)),
+                        Span::raw("]"),
+                    ]));
+                }
             }
         }
         lines.push(Line::from(vec![

@@ -75,6 +75,10 @@ impl FossilClient {
         self.run(&["diff", "--", path])
     }
 
+    pub fn checkin_diff(&self, rid: &str) -> std::result::Result<String, FossilError> {
+        self.run(&["diff", "--checkin", rid])
+    }
+
     pub fn sync(&self) -> std::result::Result<String, FossilError> {
         self.run(&["sync"])
     }
@@ -83,7 +87,7 @@ impl FossilClient {
         &self,
         path: Option<&str>,
     ) -> std::result::Result<Vec<TimelineEntry>, FossilError> {
-        let mut args: Vec<String> = vec!["timeline", "-n", "20", "-t", "ci", "-F", "%h|%a|%d|%c"]
+        let mut args: Vec<String> = vec!["timeline", "-n", "50", "-t", "ci", "-F", "%h|%a|%d|%c"]
             .into_iter()
             .map(|s| s.to_string())
             .collect();

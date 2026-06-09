@@ -66,6 +66,7 @@ pub struct AppState {
     pub ignore_prompt: Option<String>,
     pub discard_prompt: Option<String>,
     pub history: Vec<crate::fossil::TimelineEntry>,
+    pub timeline_diff: Option<String>,
     pub redraw: bool,
     pub show_hex: bool,
     pub timeline_selected: usize,
@@ -94,6 +95,7 @@ impl App {
                 ignore_prompt: None,
                 discard_prompt: None,
                 history: Vec::new(),
+                timeline_diff: None,
                 redraw: false,
                 show_hex: false,
                 timeline_selected: 0,
@@ -109,12 +111,14 @@ impl App {
                 self.state.diff_scroll = 0;
                 self.state.timeline_selected = 0;
                 self.refresh_views();
+                self.refresh_timeline_details();
             }
             Err(FossilError::NotRepository) => {
                 self.state.repo = None;
                 self.state.diff = None;
                 self.state.diff_scroll = 0;
                 self.state.timeline_selected = 0;
+                self.state.timeline_diff = None;
                 self.state.selected_files.clear();
                 self.state.error = Some("Not inside a Fossil checkout".to_string());
             }
@@ -137,12 +141,25 @@ impl App {
         }
     }
 
+    fn refresh_timeline_details(&mut self) {
+        if let Some(repo) = &self.state.repo {
+            if let Some(entry) = repo.timeline.get(self.state.timeline_selected) {
+                self.state.timeline_diff = self.client.checkin_diff(&entry.rid).ok();
+            }
+        }
+    }
+
     fn refresh_views(&mut self) {
         match self.state.tab {
-            Tab::Timeline => self.refresh_timeline(),
-            _ => self.refresh_history(),
+            Tab::Timeline => {
+                self.refresh_timeline();
+                self.refresh_timeline_details();
+            }
+            _ => {
+                self.refresh_history();
+                self.refresh_diff();
+            }
         }
-        self.refresh_diff();
     }
 
     fn sync_with_remote(&mut self) {
@@ -559,6 +576,7 @@ impl App {
                         self.state.timeline_selected -= 1;
                     }
                     self.refresh_timeline();
+                    self.refresh_timeline_details();
                 }
                 _ => {
                     if repo.selected_file > 0 {
@@ -585,6 +603,7 @@ impl App {
                         self.state.timeline_selected += 1;
                     }
                     self.refresh_timeline();
+                    self.refresh_timeline_details();
                 }
                 _ => {
                     if repo.selected_file + 1 < repo.files.len() {
@@ -604,6 +623,7 @@ impl App {
                     if index < repo.timeline.len() {
                         self.state.timeline_selected = index;
                         self.refresh_timeline();
+                        self.refresh_timeline_details();
                     }
                 }
                 _ => {
