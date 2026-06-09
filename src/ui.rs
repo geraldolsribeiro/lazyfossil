@@ -175,7 +175,12 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     "Esc",
                     Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
                 ),
-                Span::raw(" cancel"),
+                Span::raw(" cancel · "),
+                Span::styled(
+                    "Enter",
+                    Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" confirm"),
             ]),
         ]);
         cursor = Some((
@@ -356,40 +361,39 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 }
 
 fn styled_message_line(line: &str) -> Vec<Span<'static>> {
-    let mut s = line.to_string();
-    s += "xxx";
-    vec![Span::raw(s)]
-    // let mut spans = Vec::new();
-    // let mut rest = line;
-    // while let Some(start) = rest.find("[[") {
-    //     let (before, after_start) = rest.split_at(start);
-    //     if !before.is_empty() {
-    //         spans.push(Span::raw(before.to_string()));
-    //     }
-    //     let inner = &after_start[2..];
-    //     if let Some(end) = inner.find("]]") {
-    //         let value = &inner[..end];
-    //         spans.push(Span::styled(
-    //             value.to_string(),
-    //             Style::default()
-    //                 .fg(Color::Yellow)
-    //                 .add_modifier(Modifier::BOLD),
-    //         ));
-    //         rest = &inner[end + 2..];
-    //     } else {
-    //         spans.push(Span::raw(after_start.to_string()));
-    //         rest = "";
-    //         break;
-    //     }
-    // }
-    // if !rest.is_empty() {
-    //     spans.push(Span::raw(rest.to_string()));
-    // }
-    // if spans.is_empty() {
-    //     vec![Span::raw(line.to_string())]
-    // } else {
-    //     spans
-    // }
+    // let mut s = line.to_string();
+    // vec![Span::raw(s)]
+    let mut spans = Vec::new();
+    let mut rest = line;
+    while let Some(start) = rest.find("[[") {
+        let (before, after_start) = rest.split_at(start);
+        if !before.is_empty() {
+            spans.push(Span::raw(before.to_string()));
+        }
+        let inner = &after_start[2..];
+        if let Some(end) = inner.find("]]") {
+            let value = &inner[..end];
+            spans.push(Span::styled(
+                value.to_string(),
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ));
+            rest = &inner[end + 2..];
+        } else {
+            spans.push(Span::raw(after_start.to_string()));
+            rest = "";
+            break;
+        }
+    }
+    if !rest.is_empty() {
+        spans.push(Span::raw(rest.to_string()));
+    }
+    if spans.is_empty() {
+        vec![Span::raw(line.to_string())]
+    } else {
+        spans
+    }
 }
 
 fn color_diff(diff: String) -> Text<'static> {
