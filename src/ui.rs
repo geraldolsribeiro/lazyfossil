@@ -129,11 +129,32 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .wrap(Wrap { trim: true })
             }
             Tab::Timeline => {
+                let mut lines = Vec::new();
+                if let Some(repo) = &state.repo {
+                    if let Some(entry) = repo.timeline.get(state.timeline_selected) {
+                        lines.push(Line::from(vec![
+                            Span::styled("commit ", Style::default().fg(Color::DarkGray)),
+                            Span::styled(entry.rid.clone(), Style::default().fg(Color::Yellow)),
+                        ]));
+                        lines.push(Line::from(vec![
+                            Span::styled("author ", Style::default().fg(Color::DarkGray)),
+                            Span::raw(entry.user.clone()),
+                            Span::raw("  "),
+                            Span::styled(entry.date.clone(), Style::default().fg(Color::DarkGray)),
+                        ]));
+                        lines.push(Line::from(vec![
+                            Span::styled("message ", Style::default().fg(Color::DarkGray)),
+                            Span::raw(entry.message.clone()),
+                        ]));
+                        lines.push(Line::from(""));
+                    }
+                }
                 let diff = state
                     .timeline_diff
                     .clone()
                     .unwrap_or_else(|| "No timeline diff available".to_string());
-                Paragraph::new(color_diff(diff))
+                lines.extend(color_diff(diff).lines);
+                Paragraph::new(Text::from(lines))
                     .scroll((state.diff_scroll, 0))
                     .block(Block::default().borders(Borders::ALL).title("Details"))
                     .wrap(Wrap { trim: false })
