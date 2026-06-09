@@ -316,19 +316,9 @@ fn color_diff(diff: String) -> Text<'static> {
                 if line.starts_with("Press [o] to open externally or [H] for hex view") {
                     return Line::from(vec![
                         Span::raw("Press "),
-                        Span::styled(
-                            "o",
-                            Style::default()
-                                .fg(Color::Yellow)
-                                .add_modifier(Modifier::BOLD),
-                        ),
+                        key_span("o", Color::Yellow),
                         Span::raw(" to open externally or "),
-                        Span::styled(
-                            "H",
-                            Style::default()
-                                .fg(Color::Yellow)
-                                .add_modifier(Modifier::BOLD),
-                        ),
+                        key_span("H", Color::Yellow),
                         Span::raw(" for hex view"),
                     ]);
                 }
@@ -353,4 +343,32 @@ fn color_diff(diff: String) -> Text<'static> {
             })
             .collect::<Vec<_>>(),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn confirmation_prompt_contains_hint_line() {
+        let text = confirmation_prompt("ignore ", "tracked.txt", "?");
+        let lines = text.lines.into_iter().collect::<Vec<_>>();
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0].spans[1].content, "tracked.txt");
+        assert_eq!(lines[1].spans[0].content, "Esc");
+        assert_eq!(lines[1].spans[2].content, "Enter");
+    }
+
+    #[test]
+    fn styled_message_line_highlights_markers() {
+        let spans = styled_message_line("File [[path/to/file]] renamed");
+        assert!(spans.iter().any(|span| span.content.as_ref() == "path/to/file"));
+        assert!(spans.len() >= 3);
+    }
+
+    #[test]
+    fn key_span_uses_expected_label() {
+        let span = key_span("Esc", Color::Red);
+        assert_eq!(span.content, "Esc");
+    }
 }

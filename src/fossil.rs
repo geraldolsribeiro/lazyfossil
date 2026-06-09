@@ -349,7 +349,7 @@ mod tests {
 
         let old = std::env::current_dir().unwrap();
         std::env::set_current_dir(&dir).unwrap();
-        update_ignore_file("notes.txt").unwrap();
+        update_ignore_file(&dir, "notes.txt").unwrap();
         std::env::set_current_dir(old).unwrap();
 
         let contents = std::fs::read_to_string(ignore).unwrap();
