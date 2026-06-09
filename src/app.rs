@@ -319,12 +319,26 @@ impl App {
         let Some(path) = self.state.discard_prompt.take() else {
             return;
         };
-        match self.client.discard_file(&path) {
+        let is_extra = self
+            .state
+            .repo
+            .as_ref()
+            .and_then(|repo| repo.files.iter().find(|f| f.path == path))
+            .is_some_and(|file| file.status == "extra");
+
+        let result = if is_extra {
+            let full_path = self.display_path(&path);
+            fs::remove_file(&full_path).map_err(|e| e.to_string())
+        } else {
+            self.client.discard_file(&path).map(|_| ()).map_err(|e| e.to_string())
+        };
+
+        match result {
             Ok(_) => {
                 self.refresh();
                 self.state.redraw = true;
             }
-            Err(err) => self.state.error = Some(err.to_string()),
+            Err(err) => self.state.error = Some(err),
         }
     }
 
