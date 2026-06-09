@@ -46,7 +46,7 @@ Download pre-built binaries from the latest GitHub release:
 ## Source code
 
 The **lazyfossil** source code is maintained in **Fossil SCM** and mirrored to **GitHub** and **crates.io**.
-A public Fossil repository will be available soon, likely on <https://chiselapp.com/>.
+The Fossil repository is available at <https://chiselapp.com/user/geraldo/repository/lazyfossil/>.
 
 ## Screenshots and demos
 
