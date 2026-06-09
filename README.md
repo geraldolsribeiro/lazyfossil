@@ -12,6 +12,9 @@ A lazygit-inspired terminal UI for Fossil SCM.
 
 ## Project goals
 
+Make it easy to work with Fossil from the terminal:
+browse files, see history, preview changes, and commit or sync without extra friction.
+
 - Provide a fast terminal workflow for Fossil checkouts
 - Combine working-tree and history browsing in a single UI
 - Commit subsets of files without a staging area
@@ -34,15 +37,11 @@ Make sure you have **Rust** installed first, if not visit <https://rust-lang.org
 
 ### Pre-built binaries
 
-Download pre-built binaries from the GitHub releases page:
+Download pre-built binaries from the latest GitHub release:
 
-<https://github.com/geraldolsribeiro/lazyfossil/releases/>
-
-Available builds:
-
-- Linux
-- macOS
-- Windows
+- Linux: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-linux>
+- macOS: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>
+- Windows: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-windows.exe>
 
 ## Source code
 
@@ -157,6 +156,7 @@ fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
 ## Versioning
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
+
 Current version: `0.5.3`.
 
 ## Star History
