@@ -6,3 +6,6 @@ target
 *.log
 .DS_Store
 book/book/
+vhs/*.gif
+vhs/repo01.fossil
+vhs/work/src/my_file.c
