@@ -50,7 +50,8 @@ struct App {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
     WorkingTree,
-    History,
+    FileHistory,
+    Timeline,
 }
 
 pub struct AppState {
@@ -67,6 +68,7 @@ pub struct AppState {
     pub history: Vec<crate::fossil::TimelineEntry>,
     pub redraw: bool,
     pub show_hex: bool,
+    pub timeline_selected: usize,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -94,6 +96,7 @@ impl App {
                 history: Vec::new(),
                 redraw: false,
                 show_hex: false,
+                timeline_selected: 0,
             },
         }
     }
@@ -104,12 +107,14 @@ impl App {
                 self.state.repo = Some(repo);
                 self.state.error = None;
                 self.state.diff_scroll = 0;
+                self.state.timeline_selected = 0;
                 self.refresh_views();
             }
             Err(FossilError::NotRepository) => {
                 self.state.repo = None;
                 self.state.diff = None;
                 self.state.diff_scroll = 0;
+                self.state.timeline_selected = 0;
                 self.state.selected_files.clear();
                 self.state.error = Some("Not inside a Fossil checkout".to_string());
             }
@@ -126,8 +131,17 @@ impl App {
         }
     }
 
+    fn refresh_timeline(&mut self) {
+        if let Some(repo) = &self.state.repo {
+            self.state.history = repo.timeline.clone();
+        }
+    }
+
     fn refresh_views(&mut self) {
-        self.refresh_history();
+        match self.state.tab {
+            Tab::Timeline => self.refresh_timeline(),
+            _ => self.refresh_history(),
+        }
         self.refresh_diff();
     }
 
@@ -539,11 +553,21 @@ impl App {
 
     fn select_prev(&mut self) {
         if let Some(repo) = &mut self.state.repo {
-            if repo.selected_file > 0 {
-                repo.selected_file -= 1;
+            match self.state.tab {
+                Tab::Timeline => {
+                    if self.state.timeline_selected > 0 {
+                        self.state.timeline_selected -= 1;
+                    }
+                    self.refresh_timeline();
+                }
+                _ => {
+                    if repo.selected_file > 0 {
+                        repo.selected_file -= 1;
+                    }
+                    self.refresh_views();
+                }
             }
         }
-        self.refresh_views();
     }
 
     fn scroll_diff_up(&mut self) {
@@ -555,19 +579,39 @@ impl App {
 
     fn select_next(&mut self) {
         if let Some(repo) = &mut self.state.repo {
-            if repo.selected_file + 1 < repo.files.len() {
-                repo.selected_file += 1;
+            match self.state.tab {
+                Tab::Timeline => {
+                    if self.state.timeline_selected + 1 < repo.timeline.len() {
+                        self.state.timeline_selected += 1;
+                    }
+                    self.refresh_timeline();
+                }
+                _ => {
+                    if repo.selected_file + 1 < repo.files.len() {
+                        repo.selected_file += 1;
+                    }
+                    self.refresh_views();
+                }
             }
         }
-        self.refresh_views();
     }
 
     fn click_file(&mut self, _column: u16, row: u16) {
         let index = row.saturating_sub(4) as usize;
         if let Some(repo) = &mut self.state.repo {
-            if index < repo.files.len() {
-                repo.selected_file = index;
-                self.refresh_views();
+            match self.state.tab {
+                Tab::Timeline => {
+                    if index < repo.timeline.len() {
+                        self.state.timeline_selected = index;
+                        self.refresh_timeline();
+                    }
+                }
+                _ => {
+                    if index < repo.files.len() {
+                        repo.selected_file = index;
+                        self.refresh_views();
+                    }
+                }
             }
         }
     }
@@ -626,10 +670,14 @@ impl App {
                             }
                             KeyCode::Tab => {
                                 self.state.tab = match self.state.tab {
-                                    Tab::WorkingTree => Tab::History,
-                                    Tab::History => Tab::WorkingTree,
+                                    Tab::WorkingTree => Tab::FileHistory,
+                                    Tab::FileHistory => Tab::Timeline,
+                                    Tab::Timeline => Tab::WorkingTree,
                                 };
-                                self.refresh_history();
+                                match self.state.tab {
+                                    Tab::Timeline => self.refresh_timeline(),
+                                    _ => self.refresh_history(),
+                                }
                             }
                             _ => {}
                         }

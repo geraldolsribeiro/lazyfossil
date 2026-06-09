@@ -15,8 +15,12 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         ])
         .split(frame.area());
 
-    let tabs = Tabs::new(vec!["Working tree", "History"])
-        .select(if state.tab == Tab::WorkingTree { 0 } else { 1 })
+    let tabs = Tabs::new(vec!["Working tree", "File history", "Timeline"])
+        .select(match state.tab {
+            Tab::WorkingTree => 0,
+            Tab::FileHistory => 1,
+            Tab::Timeline => 2,
+        })
         .block(Block::default().borders(Borders::ALL).title("lazyfossil"));
     frame.render_widget(tabs, areas[0]);
 
@@ -27,46 +31,65 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
 
     let mut file_state = ListState::default();
     let left = if let Some(repo) = &state.repo {
-        file_state.select(Some(repo.selected_file));
-        let items: Vec<ListItem> = repo
-            .files
-            .iter()
-            .enumerate()
-            .map(|(i, f)| {
-                let prefix = if i == repo.selected_file { ">" } else { " " };
-                let selected = if state.selected_files.iter().any(|p| p == &f.path) {
-                    "*"
-                } else {
-                    " "
-                };
-                let kind = match f.status.as_str() {
-                    "extra" => "??",
-                    "edited" => "M",
-                    "added" => "A",
-                    "deleted" => "D",
-                    "missing" => "!",
-                    "conflict" => "C",
-                    _ => "✓",
-                };
-                let mut item = ListItem::new(format!(
-                    "{}{} {}",
-                    prefix,
-                    selected,
-                    format!("{} {}", kind, f.path)
-                ));
-                if f.status == "checked-out" {
-                    item = item.style(Style::default().fg(Color::Green));
-                } else if f.status == "edited" {
-                    item = item.style(Style::default().fg(Color::LightRed));
-                } else if f.status == "missing" {
-                    item = item.style(Style::default().fg(Color::Red));
-                }
-                item
-            })
-            .collect();
-        List::new(items)
-            .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-            .block(Block::default().borders(Borders::ALL).title("Files"))
+        match state.tab {
+            Tab::Timeline => {
+                file_state.select(Some(state.timeline_selected));
+                let items: Vec<ListItem> = repo
+                    .timeline
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| {
+                        let prefix = if i == state.timeline_selected { ">" } else { " " };
+                        ListItem::new(format!("{}{} {}", prefix, t.rid, t.message))
+                    })
+                    .collect();
+                List::new(items)
+                    .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
+                    .block(Block::default().borders(Borders::ALL).title("Timeline"))
+            }
+            _ => {
+                file_state.select(Some(repo.selected_file));
+                let items: Vec<ListItem> = repo
+                    .files
+                    .iter()
+                    .enumerate()
+                    .map(|(i, f)| {
+                        let prefix = if i == repo.selected_file { ">" } else { " " };
+                        let selected = if state.selected_files.iter().any(|p| p == &f.path) {
+                            "*"
+                        } else {
+                            " "
+                        };
+                        let kind = match f.status.as_str() {
+                            "extra" => "??",
+                            "edited" => "M",
+                            "added" => "A",
+                            "deleted" => "D",
+                            "missing" => "!",
+                            "conflict" => "C",
+                            _ => "✓",
+                        };
+                        let mut item = ListItem::new(format!(
+                            "{}{} {}",
+                            prefix,
+                            selected,
+                            format!("{} {}", kind, f.path)
+                        ));
+                        if f.status == "checked-out" {
+                            item = item.style(Style::default().fg(Color::Green));
+                        } else if f.status == "edited" {
+                            item = item.style(Style::default().fg(Color::LightRed));
+                        } else if f.status == "missing" {
+                            item = item.style(Style::default().fg(Color::Red));
+                        }
+                        item
+                    })
+                    .collect();
+                List::new(items)
+                    .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
+                    .block(Block::default().borders(Borders::ALL).title("Files"))
+            }
+        }
     } else {
         List::new(vec![ListItem::new("No repository detected")])
             .block(Block::default().borders(Borders::ALL).title("Files"))
@@ -84,7 +107,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .block(Block::default().borders(Borders::ALL).title("Details"))
                     .wrap(Wrap { trim: false })
             }
-            Tab::History => {
+            Tab::FileHistory => {
                 let lines = if state.history.is_empty() {
                     vec![Line::from("No history entries found")]
                 } else {
@@ -102,6 +125,24 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                         .collect::<Vec<_>>()
                 };
                 Paragraph::new(Text::from(lines))
+                    .block(Block::default().borders(Borders::ALL).title("Details"))
+                    .wrap(Wrap { trim: true })
+            }
+            Tab::Timeline => {
+                let entry = state
+                    .repo
+                    .as_ref()
+                    .and_then(|repo| repo.timeline.get(state.timeline_selected));
+                let text = if let Some(t) = entry {
+                    Text::from(vec![
+                        Line::from(format!("{}", t.rid)),
+                        Line::from(format!("{}", t.message)),
+                        Line::from(format!("{}  {}", t.user, t.date)),
+                    ])
+                } else {
+                    Text::from("No timeline entry selected")
+                };
+                Paragraph::new(text)
                     .block(Block::default().borders(Borders::ALL).title("Details"))
                     .wrap(Wrap { trim: true })
             }
