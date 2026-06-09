@@ -12,7 +12,7 @@ readme = "README.md"
 homepage = "https://lazyfossil.org"
 repository = "https://github.com/geraldolsribeiro/lazyfossil"
 keywords = ["fossil", "tui", "terminal", "scm"]
-categories = ["command-line-utilities", "development-tools", "scm"]
+categories = ["command-line-utilities", "development-tools"]
 include = [
     "Cargo.toml",
     "README.md",

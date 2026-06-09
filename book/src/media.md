@@ -4,7 +4,9 @@
 
 The project includes screenshots and demo assets.
 
-Demo sources live in `docs/vhs/` and can be replayed with [VHS](https://github.com/charmbracelet/vhs) to refresh screenshots, GIFs, or short videos.
+Demo sources live in `vhs/` and can be replayed with [VHS](https://github.com/charmbracelet/vhs) to refresh screenshots, GIFs, or short videos.
+
+Current demo tapes include the file-history walkthrough in `vhs/file-history.tape`.
 
 To export versioned media for a release, run:
 

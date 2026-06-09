@@ -1,7 +1,6 @@
-Set Shell bash
-Set FontSize 15
-Set Padding 30
+Source terminal_config.tape
 
+# Create a fresh Fossil checkout
 Hide
 Type "cd /tmp"
 Enter
@@ -27,45 +26,40 @@ Type "fossil open ../repo01.fossil"
 Enter
 Sleep 1s
 
-Type "# Open lazyfossil into fresh repository"
-Enter
+# Open lazyfossil into the fresh repository
 Type lazyfossil
 Sleep 2s
 Enter
 Sleep 5s
 Type q
 
-Type "# Creating a file in src folder"
-Enter
+# Create a new file for the commit demo
 Type "mkdir -p src"
-Sleep 2s
 Enter
+Sleep 2s
 
 Type "echo 'int main() { printf( hello world ); return 0; }' > src/my_file.c"
-Sleep 2s
 Enter
+Sleep 2s
 
-Type "# The new file commited by pressing space (select) and 'c' (commit)"
-Enter
-Sleep 2s
+# Re-open lazyfossil to commit the file
 Type lazyfossil
 Sleep 1s
 Enter
 Sleep 2s
 
-# Select file
+# Select the file
 Space
 Sleep 2s
 
 # Start commit
 Type c
 
+# Enter the commit message
 Type "First commit on my amazing project"
 Sleep 1s
 
 # Confirm commit
-Sleep 2s
 Enter
-
 Sleep 5s
 Type q

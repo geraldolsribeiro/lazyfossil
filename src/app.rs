@@ -66,9 +66,11 @@ pub struct AppState {
     pub ignore_prompt: Option<String>,
     pub discard_prompt: Option<String>,
     pub history: Vec<crate::fossil::TimelineEntry>,
+    pub history_diff: Option<String>,
     pub timeline_diff: Option<String>,
     pub redraw: bool,
     pub show_hex: bool,
+    pub history_selected: usize,
     pub timeline_selected: usize,
 }
 
@@ -95,9 +97,11 @@ impl App {
                 ignore_prompt: None,
                 discard_prompt: None,
                 history: Vec::new(),
+                history_diff: None,
                 timeline_diff: None,
                 redraw: false,
                 show_hex: false,
+                history_selected: 0,
                 timeline_selected: 0,
             },
         }
@@ -109,6 +113,7 @@ impl App {
                 self.state.repo = Some(repo);
                 self.state.error = None;
                 self.state.diff_scroll = 0;
+                self.state.history_selected = 0;
                 self.state.timeline_selected = 0;
                 self.refresh_views();
                 self.refresh_timeline_details();
@@ -117,7 +122,9 @@ impl App {
                 self.state.repo = None;
                 self.state.diff = None;
                 self.state.diff_scroll = 0;
+                self.state.history_selected = 0;
                 self.state.timeline_selected = 0;
+                self.state.history_diff = None;
                 self.state.timeline_diff = None;
                 self.state.selected_files.clear();
                 self.state.error = Some("Not inside a Fossil checkout".to_string());
@@ -132,6 +139,16 @@ impl App {
                 .client
                 .history_timeline(Some(&path))
                 .unwrap_or_default();
+            if self.state.history_selected >= self.state.history.len() {
+                self.state.history_selected = 0;
+            }
+            self.refresh_history_details();
+        }
+    }
+
+    fn refresh_history_details(&mut self) {
+        if let Some(entry) = self.state.history.get(self.state.history_selected) {
+            self.state.history_diff = self.client.checkin_diff(&entry.rid).ok();
         }
     }
 
@@ -578,6 +595,13 @@ impl App {
                     self.refresh_timeline();
                     self.refresh_timeline_details();
                 }
+                Tab::FileHistory => {
+                    if self.state.history_selected > 0 {
+                        self.state.history_selected -= 1;
+                    }
+                    self.refresh_history();
+                    self.refresh_history_details();
+                }
                 _ => {
                     if repo.selected_file > 0 {
                         repo.selected_file -= 1;
@@ -605,6 +629,13 @@ impl App {
                     self.refresh_timeline();
                     self.refresh_timeline_details();
                 }
+                Tab::FileHistory => {
+                    if self.state.history_selected + 1 < self.state.history.len() {
+                        self.state.history_selected += 1;
+                    }
+                    self.refresh_history();
+                    self.refresh_history_details();
+                }
                 _ => {
                     if repo.selected_file + 1 < repo.files.len() {
                         repo.selected_file += 1;
@@ -624,6 +655,13 @@ impl App {
                         self.state.timeline_selected = index;
                         self.refresh_timeline();
                         self.refresh_timeline_details();
+                    }
+                }
+                Tab::FileHistory => {
+                    if index < self.state.history.len() {
+                        self.state.history_selected = index;
+                        self.refresh_history();
+                        self.refresh_history_details();
                     }
                 }
                 _ => {
@@ -696,7 +734,11 @@ impl App {
                                 };
                                 match self.state.tab {
                                     Tab::Timeline => self.refresh_timeline(),
+                                    Tab::FileHistory => self.refresh_history(),
                                     _ => self.refresh_history(),
+                                }
+                                if matches!(self.state.tab, Tab::FileHistory) {
+                                    self.refresh_history_details();
                                 }
                             }
                             _ => {}

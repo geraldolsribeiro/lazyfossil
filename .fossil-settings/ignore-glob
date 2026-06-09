@@ -7,5 +7,7 @@ target
 .DS_Store
 book/book/
 vhs/*.gif
+vhs/*.png
 vhs/repo01.fossil
 vhs/work/src/my_file.c
+book/book.tgz

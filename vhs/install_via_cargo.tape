@@ -1,7 +1,6 @@
-Set Shell bash
-Set FontSize 15
-Set Padding 30
+Source terminal_config.tape
 
+# Clear any previous install output
 Hide
 Type "cargo uninstall lazyfossil"
 Enter
@@ -10,11 +9,13 @@ Type clear
 Enter
 Show
 
+# Install from crates.io
 Type "cargo install lazyfossil"
 Sleep 1s
 Enter
 Sleep 20s
 
+# Launch the app
 Type "lazyfossil"
 Sleep 2s
 Enter

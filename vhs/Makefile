@@ -1,24 +1,19 @@
-TAPES=$(wildcard *.tape)
+Q=@
+TAPES=$(filter-out terminal_config.tape,$(wildcard *.tape))
 GIFS=$(TAPES:.tape=.gif)
 
-# %.gif: %.tape ../../target/release/lazyfossil
-# 	docker run --rm \
-# 		-v $(shell pwd):/vhs \
-# 		-v /usr/bin/fossil:/usr/bin/fossil \
-# 		-v ../../target/release/lazyfossil:/bin/lazyfossil \
-# 		ghcr.io/charmbracelet/vhs $<
-# 	sudo chown $(shell id -u):$(shell id -g) *.gif
-# 	mv output.gif $@
-
-%.gif: %.tape ../../target/release/lazyfossil
-	vhs $< -o tmp.gif
-	gifsicle -O3 --lossy=100 tmp.gif -o $@
-	rm tmp.gif
+%.gif: %.tape ../target/release/lazyfossil
+	$(Q)echo "Rendering $@"
+	$(Q)PATH=../target/release/:$(PATH) vhs $< -o tmp.gif
+	$(Q)gifsicle -O3 --lossy=100 tmp.gif -o $@
+	$(Q)rm tmp.gif
 
 .PHONY: all
 all: $(GIFS)
 
-.PHONY: rclone
-rclone:
+.PHONY: upload
+upload:
 	rclone lsf r2:lazyfossil
-	rclone copy ./ r2:lazyfossil/ --include "*.gif" --transfers 16 -P
+	rclone copy ./ r2:lazyfossil/ --include "*.gif" --transfers 16 --progress
+	rclone copy ./ r2:lazyfossil/ --include "*.png" --transfers 16 --progress
+	rclone copy ../doc/images/lazyfossil_logo.png r2:lazyfossil --s3-no-check-bucket

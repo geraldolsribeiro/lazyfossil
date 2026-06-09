@@ -1,26 +1,24 @@
-# VHS demos
+# VHS demos and media
 
-This directory contains reproducible terminal demo scripts for lazyfossil.
+This directory contains source tapes for reproducible terminal demos used in the README, release notes, website, and other docs.
 
-## Purpose
-- Produce screenshots, GIFs, and short videos for documentation
-- Keep demo recordings versioned alongside feature work
-- Make it easy to refresh media for each release
+## Suggested workflow
 
-## Suggested process
-1. Update the script to match the current UI/version
-2. Run the script with `vhs`
-3. Export the resulting media into `doc/images/`
-4. Reference the exported files from `README.md` and the website
+- Record terminal demos with [VHS](https://github.com/charmbracelet/vhs)
+- Export screenshots or GIFs from the same scripted terminal sessions
+- Keep assets aligned with the current release version
+- From the repository root, run `make media` to build the release binary and render all tapes in `vhs/`
 
-## Notes
-- Keep scripts small and feature-focused
-- Prefer one demo per user-facing workflow
-- Avoid relying on long-running or fragile terminal interactions
+## Current demos
 
-## Sync
+- `file-history.tape` — shows the file-history view with commit details and diffs
+- `install_via_cargo.tape` — installs lazyfossil from crates.io and launches it
+- `open_new_checkout.tape` — creates a fresh checkout, opens lazyfossil, and commits a new file
+- `open_out_of_checkout_dir.tape` — shows the not-in-checkout startup state
 
-```
+## Conventions
 
-sudo -v ; curl https://rclone.org/install.sh | sudo bash
-```
+- Keep demos short and focused on a single capability
+- Prefer deterministic interactions and visible key presses
+- Re-export screenshots/GIFs/videos from these tapes when the UI changes
+- Store exported images/video in Cloudflare R2 bucket

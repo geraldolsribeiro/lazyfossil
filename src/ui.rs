@@ -47,6 +47,25 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
                     .block(Block::default().borders(Borders::ALL).title("Timeline"))
             }
+            Tab::FileHistory => {
+                file_state.select(Some(state.history_selected));
+                let items: Vec<ListItem> = if state.history.is_empty() {
+                    vec![ListItem::new("No history entries found")]
+                } else {
+                    state
+                        .history
+                        .iter()
+                        .enumerate()
+                        .map(|(i, t)| {
+                            let prefix = if i == state.history_selected { ">" } else { " " };
+                            ListItem::new(format!("{}{} {}", prefix, t.rid, t.message))
+                        })
+                        .collect()
+                };
+                List::new(items)
+                    .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
+                    .block(Block::default().borders(Borders::ALL).title("History"))
+            }
             _ => {
                 file_state.select(Some(repo.selected_file));
                 let items: Vec<ListItem> = repo
@@ -108,25 +127,33 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .wrap(Wrap { trim: false })
             }
             Tab::FileHistory => {
-                let lines = if state.history.is_empty() {
-                    vec![Line::from("No history entries found")]
-                } else {
-                    state
-                        .history
-                        .iter()
-                        .take(12)
-                        .flat_map(|t| {
-                            [
-                                Line::from(format!("{} {}", t.rid, t.message)),
-                                Line::from(format!("  {}  {}", t.user, t.date)),
-                                Line::from(""),
-                            ]
-                        })
-                        .collect::<Vec<_>>()
-                };
+                let mut lines = Vec::new();
+                if let Some(entry) = state.history.get(state.history_selected) {
+                    lines.push(Line::from(vec![
+                        Span::styled("commit ", Style::default().fg(Color::DarkGray)),
+                        Span::styled(entry.rid.clone(), Style::default().fg(Color::Yellow)),
+                    ]));
+                    lines.push(Line::from(vec![
+                        Span::styled("author ", Style::default().fg(Color::DarkGray)),
+                        Span::raw(entry.user.clone()),
+                        Span::raw("  "),
+                        Span::styled(entry.date.clone(), Style::default().fg(Color::DarkGray)),
+                    ]));
+                    lines.push(Line::from(vec![
+                        Span::styled("message ", Style::default().fg(Color::DarkGray)),
+                        Span::raw(entry.message.clone()),
+                    ]));
+                    lines.push(Line::from(""));
+                }
+                let diff = state
+                    .history_diff
+                    .clone()
+                    .unwrap_or_else(|| "No history diff available".to_string());
+                lines.extend(color_diff(diff).lines);
                 Paragraph::new(Text::from(lines))
+                    .scroll((state.diff_scroll, 0))
                     .block(Block::default().borders(Borders::ALL).title("Details"))
-                    .wrap(Wrap { trim: true })
+                    .wrap(Wrap { trim: false })
             }
             Tab::Timeline => {
                 let mut lines = Vec::new();

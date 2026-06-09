@@ -18,3 +18,8 @@ publish:
 fix:
 	RUSTFLAGS="-D unused-code" \
 		/home/geraldo/git/geraldolsribeiro/cargo/target/release/cargo fix
+
+.PHONY: media
+media:
+	cargo build --release
+	$(MAKE) -C vhs
