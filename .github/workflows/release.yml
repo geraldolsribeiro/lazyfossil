@@ -64,6 +64,10 @@ jobs:
           cp all-artifacts/lazyfossil-windows-latest/lazyfossil.exe release-files/lazyfossil-windows.exe
           cp all-artifacts/lazyfossil-macos-latest/lazyfossil       release-files/lazyfossil-macos
 
+      - name: Prepare release media note
+        run: |
+          echo "Release media can be refreshed with docs/vhs and scripts/export-media.sh for ${{ github.ref_name }}"
+
       - name: Create and Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:

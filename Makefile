@@ -1,7 +1,8 @@
 all:
 	rm -f target/debug/lazyfossil
+	rm -f target/release/lazyfossil
 	touch src/*.rs
-	cargo run --release
+	cargo run --release -- --debug
 
 publish:
 	rm -f fossil-debug.log

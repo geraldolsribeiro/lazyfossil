@@ -64,7 +64,7 @@ Demo sources live in `docs/vhs/` and can be replayed with [VHS](https://github.c
 To export versioned media for a release, run:
 
 ```bash
-./scripts/export-media.sh 0.5.2
+./scripts/export-media.sh 0.5.3
 ```
 
 ## Features
@@ -157,7 +157,7 @@ fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
 ## Versioning
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
-Current version: `0.5.2`.
+Current version: `0.5.3`.
 
 ## Star History
 
