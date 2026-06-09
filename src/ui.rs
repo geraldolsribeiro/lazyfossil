@@ -128,32 +128,14 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         let text = Text::from(vec![
             Line::from(vec![
                 Span::raw("commit "),
-                Span::styled(
-                    target,
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
+                key_span(target, Color::Yellow),
                 Span::raw(": "),
                 Span::styled(
                     msg.clone(),
                     Style::default().bg(Color::DarkGray).fg(Color::White),
                 ),
             ]),
-            Line::from(vec![
-                Span::styled(
-                    "Esc",
-                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" cancel · "),
-                Span::styled(
-                    "Enter",
-                    Style::default()
-                        .fg(Color::Green)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" confirm"),
-            ]),
+            confirmation_hint_line(),
         ]);
         cursor = Some((
             areas[2].x + 1 + 7 + target.len() as u16 + 2 + msg.chars().count() as u16,
@@ -161,58 +143,14 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         ));
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Commit"))
     } else if let Some(path) = &state.ignore_prompt {
-        let text = Text::from(vec![
-            Line::from(vec![
-                Span::raw("ignore "),
-                Span::styled(
-                    path.clone(),
-                    Style::default().bg(Color::DarkGray).fg(Color::White),
-                ),
-                Span::raw("?"),
-            ]),
-            Line::from(vec![
-                Span::styled(
-                    "Esc",
-                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" cancel · "),
-                Span::styled(
-                    "Enter",
-                    Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" confirm"),
-            ]),
-        ]);
+        let text = confirmation_prompt("ignore ", path, "?");
         cursor = Some((
             areas[2].x + 1 + 7 + path.chars().count() as u16,
             areas[2].y + 1,
         ));
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Ignore"))
     } else if let Some(path) = &state.discard_prompt {
-        let text = Text::from(vec![
-            Line::from(vec![
-                Span::raw("discard changes in "),
-                Span::styled(
-                    path.clone(),
-                    Style::default().bg(Color::DarkGray).fg(Color::White),
-                ),
-                Span::raw("?"),
-            ]),
-            Line::from(vec![
-                Span::styled(
-                    "Esc",
-                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" cancel · "),
-                Span::styled(
-                    "Enter",
-                    Style::default()
-                        .fg(Color::Green)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" confirm"),
-            ]),
-        ]);
+        let text = confirmation_prompt("discard changes in ", path, "?");
         cursor = Some((
             areas[2].x + 1 + 19 + path.chars().count() as u16,
             areas[2].y + 1,
@@ -221,82 +159,27 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
     } else {
         let sel_count = state.selected_files.len();
         let mut lines = vec![Line::from(vec![
-            Span::styled(
-                "q",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("q", Color::Yellow),
             Span::raw(" quit  "),
-            Span::styled(
-                "r",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("r", Color::Yellow),
             Span::raw(" refresh  "),
-            Span::styled(
-                "Space",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("Space", Color::Yellow),
             Span::raw(" select  "),
-            Span::styled(
-                "i",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("i", Color::Yellow),
             Span::raw(" ignore  "),
-            Span::styled(
-                "c",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("c", Color::Yellow),
             Span::raw(" commit  "),
-            Span::styled(
-                "a",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("a", Color::Yellow),
             Span::raw(" all/none  "),
-            Span::styled(
-                "p",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("p", Color::Yellow),
             Span::raw(" pull  "),
-            Span::styled(
-                "e",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("e", Color::Yellow),
             Span::raw(" edit  "),
-            Span::styled(
-                "o",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("o", Color::Yellow),
             Span::raw(" open  "),
-            Span::styled(
-                "d",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("d", Color::Yellow),
             Span::raw(" discard  "),
-            Span::styled(
-                "H",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            key_span("H", Color::Yellow),
             Span::raw(" hex"),
         ])];
         if let Some(repo) = &state.repo {
@@ -358,6 +241,36 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+fn confirmation_prompt(prefix: &str, value: &str, suffix: &str) -> Text<'static> {
+    Text::from(vec![
+        Line::from(vec![
+            Span::raw(prefix.to_string()),
+            Span::styled(
+                value.to_string(),
+                Style::default().bg(Color::DarkGray).fg(Color::White),
+            ),
+            Span::raw(suffix.to_string()),
+        ]),
+        confirmation_hint_line(),
+    ])
+}
+
+fn confirmation_hint_line() -> Line<'static> {
+    Line::from(vec![
+        key_span("Esc", Color::Red),
+        Span::raw(" cancel · "),
+        key_span("Enter", Color::Green),
+        Span::raw(" confirm"),
+    ])
+}
+
+fn key_span(label: &str, color: Color) -> Span<'static> {
+    Span::styled(
+        label.to_string(),
+        Style::default().fg(color).add_modifier(Modifier::BOLD),
+    )
 }
 
 fn styled_message_line(line: &str) -> Vec<Span<'static>> {
