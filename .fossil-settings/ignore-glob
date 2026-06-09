@@ -5,3 +5,4 @@ target
 *.tmp
 *.log
 .DS_Store
+book/book/

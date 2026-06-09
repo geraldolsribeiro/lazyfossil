@@ -2,13 +2,17 @@
 name = "lazyfossil"
 version = "0.5.3"
 edition = "2021"
-description = "A lazygit-inspired TUI for Fossil SCM"
+description = """
+Make it easy to work with Fossil from the terminal:
+browse files, see history, preview changes, and commit or sync without extra friction.
+"""
+authors = [ "Geraldo Ribeiro <geraldolsribeiro@gmail.com>" ]
 license = "MIT"
 readme = "README.md"
 homepage = "https://lazyfossil.org"
 repository = "https://github.com/geraldolsribeiro/lazyfossil"
 keywords = ["fossil", "tui", "terminal", "scm"]
-categories = ["command-line-utilities", "development-tools"]
+categories = ["command-line-utilities", "development-tools", "scm"]
 include = [
     "Cargo.toml",
     "README.md",

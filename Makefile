@@ -4,6 +4,10 @@ all:
 	touch src/*.rs
 	cargo run --release -- --debug
 
+.PHONY: doc
+doc:
+	cargo doc --no-deps --open
+
 publish:
 	rm -f fossil-debug.log
 	cargo publish
