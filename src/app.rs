@@ -12,6 +12,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::env;
 use std::fs;
+use std::fs::OpenOptions;
 use std::io;
 use std::path::Path;
 use std::process::Command;
@@ -19,14 +20,17 @@ use std::process::Command;
 const ASCII_LOGO: &str = include_str!("../doc/images/lazyfossil_logo_01.txt");
 use std::time::Duration;
 
-pub fn run() -> Result<()> {
+pub fn run(debug_enabled: bool) -> Result<()> {
+    if debug_enabled {
+        let _ = OpenOptions::new().create(true).append(true).open("fossil-debug.log");
+    }
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let res = App::new().run(&mut terminal);
+    let res = App::new(debug_enabled).run(&mut terminal);
 
     disable_raw_mode()?;
     execute!(
@@ -73,9 +77,9 @@ pub enum CommitTarget {
 }
 
 impl App {
-    fn new() -> Self {
+    fn new(debug_enabled: bool) -> Self {
         Self {
-            client: FossilClient::new(),
+            client: FossilClient::new(debug_enabled),
             state: AppState {
                 tab: Tab::WorkingTree,
                 repo: None,
@@ -660,7 +664,7 @@ mod tests {
 
     #[test]
     fn toggles_selection_in_memory() {
-        let mut app = App::new();
+        let mut app = App::new(false);
         app.state.repo = Some(repo());
 
         app.toggle_selected_file();
@@ -672,7 +676,7 @@ mod tests {
 
     #[test]
     fn toggles_select_all_and_none() {
-        let mut app = App::new();
+        let mut app = App::new(false);
         app.state.repo = Some(repo());
 
         app.toggle_select_all();
@@ -684,7 +688,7 @@ mod tests {
 
     #[test]
     fn current_file_path_tracks_selection() {
-        let mut app = App::new();
+        let mut app = App::new(false);
         app.state.repo = Some(repo());
         assert_eq!(app.current_file_path().as_deref(), Some("tracked.txt"));
         app.state.repo.as_mut().unwrap().selected_file = 1;
@@ -693,7 +697,7 @@ mod tests {
 
     #[test]
     fn start_commit_initializes_prompt() {
-        let mut app = App::new();
+        let mut app = App::new(false);
         app.start_commit(CommitTarget::Selected);
         assert_eq!(app.state.commit_target, CommitTarget::Selected);
         assert_eq!(app.state.commit_prompt.as_deref(), Some(""));
@@ -701,7 +705,7 @@ mod tests {
 
     #[test]
     fn handles_commit_input_buffer() {
-        let mut app = App::new();
+        let mut app = App::new(false);
         app.state.commit_prompt = Some(String::new());
         app.handle_commit_input(KeyCode::Char('a'));
         app.handle_commit_input(KeyCode::Char('b'));
@@ -711,7 +715,7 @@ mod tests {
 
     #[test]
     fn start_ignore_and_cancel() {
-        let mut app = App::new();
+        let mut app = App::new(false);
         app.state.repo = Some(repo());
         app.start_ignore();
         assert_eq!(app.state.ignore_prompt.as_deref(), Some("tracked.txt"));

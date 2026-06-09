@@ -5,5 +5,6 @@ mod ui;
 use anyhow::Result;
 
 fn main() -> Result<()> {
-    app::run()
+    let debug_enabled = std::env::args().any(|arg| arg == "--debug");
+    app::run(debug_enabled)
 }

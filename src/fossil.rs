@@ -45,11 +45,12 @@ impl std::error::Error for FossilError {}
 
 pub struct FossilClient {
     checkout_root: Option<PathBuf>,
+    debug_enabled: bool,
 }
 
 impl FossilClient {
-    pub fn new() -> Self {
-        Self { checkout_root: None }
+    pub fn new(debug_enabled: bool) -> Self {
+        Self { checkout_root: None, debug_enabled }
     }
 
     pub fn checkout_root_path(&self) -> Option<&Path> {
@@ -158,7 +159,9 @@ impl FossilClient {
 
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-        let _ = log_command(&cmdline, output.status.success(), &stdout, &stderr);
+        if self.debug_enabled {
+            let _ = log_command(&cmdline, output.status.success(), &stdout, &stderr);
+        }
 
         if output.status.success() {
             Ok(stdout)
