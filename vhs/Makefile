@@ -18,3 +18,7 @@ GIFS=$(TAPES:.tape=.gif)
 .PHONY: all
 all: $(GIFS)
 
+.PHONY: rclone
+rclone:
+	rclone lsf r2:lazyfossil
+	rclone copy ./ r2:lazyfossil/ --include "*.gif" --transfers 16 -P

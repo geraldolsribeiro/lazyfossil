@@ -17,3 +17,10 @@ This directory contains reproducible terminal demo scripts for lazyfossil.
 - Keep scripts small and feature-focused
 - Prefer one demo per user-facing workflow
 - Avoid relying on long-running or fragile terminal interactions
+
+## Sync
+
+```
+
+sudo -v ; curl https://rclone.org/install.sh | sudo bash
+```
