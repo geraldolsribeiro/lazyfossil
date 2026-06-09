@@ -300,7 +300,9 @@ impl App {
             self.state.error = Some("EDITOR environment variable is not set. Set it before editing, for example: export EDITOR=nvim".to_string());
             return;
         };
-        match self.spawn_external(&editor, &[path.as_str()]) {
+        let full_path = self.display_path(&path);
+        let path_arg = full_path.to_string_lossy().to_string();
+        match self.spawn_external(&editor, &[path_arg.as_str()]) {
             Ok(_) => {
                 self.refresh();
                 self.state.redraw = true;
