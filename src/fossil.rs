@@ -122,6 +122,10 @@ impl FossilClient {
         self.run(&["revert", "--", path])
     }
 
+    pub fn remove_files(&self, paths: &[String]) -> std::result::Result<String, FossilError> {
+        self.run(&build_rm_args(paths))
+    }
+
     pub fn set_binary_glob(&self, pattern: &str) -> std::result::Result<String, FossilError> {
         self.run(&["settings", "binary-glob", pattern])
     }
@@ -191,6 +195,14 @@ fn build_add_args<'a>(paths: &'a [String]) -> Vec<&'a str> {
 
 fn build_commit_args<'a>(paths: &'a [String], message: &'a str) -> Vec<&'a str> {
     let mut args = vec!["commit", "-m", message];
+    for path in paths {
+        args.push(path.as_str());
+    }
+    args
+}
+
+fn build_rm_args<'a>(paths: &'a [String]) -> Vec<&'a str> {
+    let mut args = vec!["rm"];
     for path in paths {
         args.push(path.as_str());
     }
@@ -340,6 +352,13 @@ mod tests {
         let paths = vec!["extra.txt".to_string()];
         let args = build_add_args(&paths);
         assert_eq!(args, vec!["add", "extra.txt"]);
+    }
+
+    #[test]
+    fn builds_rm_arguments_for_missing_paths() {
+        let paths = vec!["missing.txt".to_string()];
+        let args = build_rm_args(&paths);
+        assert_eq!(args, vec!["rm", "missing.txt"]);
     }
 
     #[test]

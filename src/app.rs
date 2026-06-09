@@ -447,6 +447,15 @@ impl App {
                     .map(|f| f.path.clone())
             })
             .collect();
+        let missing_files: Vec<String> = paths
+            .iter()
+            .filter_map(|path| {
+                repo.files
+                    .iter()
+                    .find(|f| &f.path == path && f.status == "missing")
+                    .map(|f| f.path.clone())
+            })
+            .collect();
         let binary_files: Vec<String> = paths
             .iter()
             .filter(|path| is_binary_path(path))
@@ -460,6 +469,9 @@ impl App {
             }
             if !extras.is_empty() {
                 self.client.add_files(&extras)?;
+            }
+            if !missing_files.is_empty() {
+                self.client.remove_files(&missing_files)?;
             }
             self.client.commit_paths(&paths, &message)
         })();
