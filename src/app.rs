@@ -563,6 +563,12 @@ impl App {
                             self.handle_discard_input(code);
                             continue;
                         }
+                        if self.state.repo.is_none() {
+                            if let KeyCode::Char('q') = code {
+                                break;
+                            }
+                            continue;
+                        }
                         match code {
                             KeyCode::Esc => {
                                 self.state.error = None;

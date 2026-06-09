@@ -115,7 +115,6 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         )
         .block(Block::default().borders(Borders::ALL).title("Details"))
     };
-
     frame.render_stateful_widget(left, body[0], &mut file_state);
     frame.render_widget(right, body[1]);
 
@@ -156,6 +155,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             areas[2].y + 1,
         ));
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Discard"))
+    } else if state.repo.is_none() {
+        let lines = vec![Line::from(vec![key_span("q", Color::Yellow), Span::raw(" quit")])];
+        Paragraph::new(Text::from(lines)).block(Block::default().borders(Borders::TOP))
     } else {
         let sel_count = state.selected_files.len();
         let mut lines = vec![Line::from(vec![
@@ -204,17 +206,27 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
 
     frame.render_widget(footer, areas[2]);
     if let Some(error) = &state.error {
-        let popup_area = centered_rect(60, 20, frame.area());
-        let mut lines = error
-            .lines()
-            .map(|line| Line::from(styled_message_line(line)))
-            .collect::<Vec<_>>();
-        lines.push(Line::from(Span::styled(
-            "Press Esc to dismiss",
-            Style::default().fg(Color::DarkGray),
-        )));
-        let popup = Paragraph::new(Text::from(lines))
-            .block(Block::default().borders(Borders::ALL).title("Warning"))
+        if state.repo.is_some() {
+            let popup_area = centered_rect(60, 20, frame.area());
+            let mut lines = error
+                .lines()
+                .map(|line| Line::from(styled_message_line(line)))
+                .collect::<Vec<_>>();
+            lines.push(Line::from(Span::styled(
+                "Press Esc to dismiss",
+                Style::default().fg(Color::DarkGray),
+            )));
+            let popup = Paragraph::new(Text::from(lines))
+                .block(Block::default().borders(Borders::ALL).title("Warning"))
+                .wrap(Wrap { trim: true });
+            frame.render_widget(Clear, popup_area);
+            frame.render_widget(popup, popup_area);
+        }
+    }
+    if state.repo.is_none() {
+        let popup_area = centered_rect(72, 42, frame.area());
+        let popup = Paragraph::new(Text::from(info_box_lines()))
+            .block(Block::default().borders(Borders::ALL).title("Not a Fossil checkout"))
             .wrap(Wrap { trim: true });
         frame.render_widget(Clear, popup_area);
         frame.render_widget(popup, popup_area);
@@ -309,6 +321,28 @@ fn styled_message_line(line: &str) -> Vec<Span<'static>> {
     }
 }
 
+fn info_box_lines() -> Vec<Line<'static>> {
+    vec![
+        Line::from(vec![Span::styled(
+            "lazyfossil could not find a Fossil checkout in this directory.",
+            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            "What you can do:",
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+        )]),
+        Line::from("  • move into a Fossil checkout and restart"),
+        Line::from("  • run `fossil open <repo>` or `fossil checkout <uuid>`"),
+        Line::from("  • press q to quit"),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            "Repository actions are disabled until a checkout is detected.",
+            Style::default().fg(Color::DarkGray),
+        )]),
+    ]
+}
+
 fn color_diff(diff: String) -> Text<'static> {
     Text::from(
         diff.lines()
@@ -370,5 +404,12 @@ mod tests {
     fn key_span_uses_expected_label() {
         let span = key_span("Esc", Color::Red);
         assert_eq!(span.content, "Esc");
+    }
+
+    #[test]
+    fn info_box_mentions_checkout_actions() {
+        let lines = info_box_lines();
+        assert!(lines.iter().any(|line| line.to_string().contains("not find a Fossil checkout")));
+        assert!(lines.iter().any(|line| line.to_string().contains("press q to quit")));
     }
 }

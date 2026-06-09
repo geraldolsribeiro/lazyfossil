@@ -16,6 +16,7 @@ A lazygit-inspired terminal UI for Fossil SCM.
 - Combine working-tree and history browsing in a single UI
 - Commit subsets of files without a staging area
 - Start with a small, practical MVP and refine it over time
+- Show a clear "not in a checkout" state when launched outside Fossil
 
 ## Installation
 
@@ -48,7 +49,7 @@ Available builds:
 The **lazyfossil** source code is maintained in **Fossil SCM** and mirrored to **GitHub** and **crates.io**.
 A public Fossil repository will be available soon, likely on <https://chiselapp.com/>.
 
-## Screenshots
+## Screenshots and demos
 
 **lazyfossil** is currently in alpha, but it is already usable. There is still plenty to polish.
 
@@ -57,6 +58,14 @@ A public Fossil repository will be available soon, likely on <https://chiselapp.
 ![Screenshot 02](doc/images/screenshot_02.png)
 
 ![Screenshot 03](doc/images/screenshot_03.png)
+
+Demo sources live in `docs/vhs/` and can be replayed with [VHS](https://github.com/charmbracelet/vhs) to refresh screenshots, GIFs, or short videos.
+
+To export versioned media for a release, run:
+
+```bash
+./scripts/export-media.sh 0.5.2
+```
 
 ## Features
 
