@@ -6,13 +6,11 @@
 [![GitHub stars](https://img.shields.io/github/stars/geraldolsribeiro/lazyfossil)](https://github.com/geraldolsribeiro/lazyfossil/stargazers)
 ![Crates.io Total Downloads](https://img.shields.io/crates/d/lazyfossil)
 
-![lazyfossil logo](doc/images/lazyfossil_logo.png)
-
-A lazygit-inspired terminal UI for Fossil SCM.
+![lazyfossil logo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/lazyfossil_logo.png)
 
 ## Project goals
 
-Make it easy to work with Fossil from the terminal:
+**lazyfossil** helps you work with **Fossil SCM** from the terminal in a simpler way:
 browse files, see history, preview changes, and commit or sync without extra friction.
 
 - Provide a fast terminal workflow for Fossil checkouts
@@ -21,32 +19,44 @@ browse files, see history, preview changes, and commit or sync without extra fri
 - Start with a small, practical MVP and refine it over time
 - Show a clear "not in a checkout" state when launched outside Fossil
 
+## Quick start
+
+1. Install it with `cargo install lazyfossil`
+2. Go to your project checkout
+3. Type `lazyfossil`
+4. Browse changes and history
+4. Press `q` to quit
+
 ## Installation
 
-### From crates.io
+## From crates.io
 
-This is the preferable way to install and update **lazyfossil**.
-
-**lazyfossil** is written in Rust and can be installed with `cargo`:
+This is the preferred way to install and update **lazyfossil**.
 
 ```bash
 cargo install lazyfossil
 ```
 
-Make sure you have **Rust** installed first, if not visit <https://rust-lang.org/tools/install/>.
+Follow instructions in <https://rust-lang.org/tools/install/> to install
+**rust**.
 
-### Pre-built binaries
+## Pre-built binaries
 
-Download pre-built binaries from the latest GitHub release:
+Download pre-built binaries from the latest [GitHub releases](https://github.com/geraldolsribeiro/lazyfossil/releases/):
 
-- Linux: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-linux>
-- macOS: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>
-- Windows: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-windows.exe>
+- [Linux](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-linux>)
+- [MacOS](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>)
+- [Windows](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-windows.exe>)
 
 ## Source code
 
-The **lazyfossil** source code is maintained in **Fossil SCM** and mirrored to **GitHub** and **crates.io**.
-The Fossil repository is available at <https://chiselapp.com/user/geraldo/repository/lazyfossil/>.
+The lazyfossil [source
+code](https://chiselapp.com/user/geraldo/repository/lazyfossil/) is distributed under MIT license, and is maintained
+via [Fossil SCM](https://fossil-scm.org/).
+
+There are mirror repositories at 
+[GitHub](https://github.com/geraldolsribeiro/lazyfossil) and
+[crates.io](https://crates.io/crates/lazyfossil).
 
 ## Screenshots and demos
 
@@ -57,14 +67,6 @@ The Fossil repository is available at <https://chiselapp.com/user/geraldo/reposi
 ![Screenshot 02](doc/images/screenshot_02.png)
 
 ![Screenshot 03](doc/images/screenshot_03.png)
-
-Demo sources live in `docs/vhs/` and can be replayed with [VHS](https://github.com/charmbracelet/vhs) to refresh screenshots, GIFs, or short videos.
-
-To export versioned media for a release, run:
-
-```bash
-./scripts/export-media.sh 0.5.3
-```
 
 ## Features
 

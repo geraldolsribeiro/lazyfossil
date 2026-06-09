@@ -1,5 +1,9 @@
 # Usage
 
+## Commit
+
+![](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/open_new_checkout.gif)
+
 Fossil does not use a staging area like git does.
 Instead, lazyfossil builds commit commands like:
 

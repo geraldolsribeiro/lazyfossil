@@ -8,17 +8,25 @@ This is the preferred way to install and update **lazyfossil**.
 cargo install lazyfossil
 ```
 
-Make sure Rust is installed first: <https://rust-lang.org/tools/install/>
+![install via cargo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/install_via_cargo.gif)
+
+Follow instructions in <https://rust-lang.org/tools/install/> to install
+**rust**.
 
 ## Pre-built binaries
 
-Download pre-built binaries from the latest GitHub release:
+Download pre-built binaries from the latest [GitHub releases](https://github.com/geraldolsribeiro/lazyfossil/releases/):
 
-- Linux: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-linux>
-- macOS: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>
-- Windows: <https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-windows.exe>
+- [Linux](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-linux>)
+- [MacOS](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>)
+- [Windows](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-windows.exe>)
 
 ## Source code
 
-The source code is maintained in Fossil SCM and mirrored to GitHub and crates.io.
-A public Fossil repository will be available soon, likely on <https://chiselapp.com/>.
+The lazyfossil [source
+code](https://chiselapp.com/user/geraldo/repository/lazyfossil/) is distributed under MIT license, and is maintained
+via [Fossil SCM](https://fossil-scm.org/).
+
+There are mirror repositories at 
+[GitHub](https://github.com/geraldolsribeiro/lazyfossil) and
+[crates.io](https://crates.io/crates/lazyfossil).

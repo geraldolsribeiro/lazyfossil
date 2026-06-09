@@ -10,9 +10,10 @@ GIFS=$(TAPES:.tape=.gif)
 # 	sudo chown $(shell id -u):$(shell id -g) *.gif
 # 	mv output.gif $@
 
-%.gif: %.tape
+%.gif: %.tape ../../target/release/lazyfossil
 	vhs $< -o tmp.gif
 	gifsicle -O3 --lossy=100 tmp.gif -o $@
+	rm tmp.gif
 
 .PHONY: all
 all: $(GIFS)
