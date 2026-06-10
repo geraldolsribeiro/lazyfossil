@@ -689,6 +689,8 @@ fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
                             Style::default()
                                 .fg(Color::Cyan)
                                 .add_modifier(Modifier::BOLD)
+                        } else if line.starts_with("Try discard ([d]) or commit ([f]/[c])") {
+                            Style::default().fg(Color::DarkGray)
                         } else {
                             Style::default().fg(Color::Reset)
                         }
@@ -820,7 +822,7 @@ mod tests {
         assert_eq!(notice_lines[1].spans[0].style.fg, Some(Color::Cyan));
 
         let missing = color_preview(
-            "Missing file [[gone.txt]]\nResolve the conflict before committing.".to_string(),
+            "Missing file [[gone.txt]]\nTry discard ([d]) or commit ([f]/[c]) after reviewing the working tree.".to_string(),
             PreviewKind::Notice,
         );
         assert!(missing.to_string().contains("gone.txt"));

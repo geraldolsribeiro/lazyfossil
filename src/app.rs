@@ -355,12 +355,12 @@ impl App {
     fn missing_file_message(&self, path: &str) -> String {
         if let Some(renamed) = self.find_renamed_extra(path) {
             format!(
-                "Missing file [[{}]]\nPossible rename detected: [[{}]]\nUse commit or discard actions from the working tree if needed.",
+                "Missing file [[{}]]\nPossible rename detected: [[{}]]\nTry discard ([d]) or commit ([f]/[c]) after reviewing the replacement.",
                 path, renamed
             )
         } else {
             format!(
-                "Missing file [[{}]]\nUse commit or discard actions from the working tree if needed.",
+                "Missing file [[{}]]\nTry discard ([d]) or commit ([f]/[c]) after reviewing the working tree.",
                 path
             )
         }
@@ -368,7 +368,7 @@ impl App {
 
     fn conflict_message(&self, path: &str) -> String {
         format!(
-            "Conflict detected for [[{}]]\nResolve the conflict before committing.",
+            "Conflict detected for [[{}]]\nResolve the conflict, then commit when ready.",
             path
         )
     }
@@ -1098,6 +1098,9 @@ mod tests {
         assert!(app
             .missing_file_message("gone.txt")
             .contains("Missing file [[gone.txt]]"));
+        assert!(app
+            .missing_file_message("gone.txt")
+            .contains("Try discard ([d]) or commit ([f]/[c])"));
         assert!(app
             .conflict_message("conflict.txt")
             .contains("Resolve the conflict"));
