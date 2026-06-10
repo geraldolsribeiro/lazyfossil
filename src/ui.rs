@@ -305,7 +305,9 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
             key_span("H", Color::Yellow),
             Span::raw(" hex  "),
             key_span("Tab", Color::Yellow),
-            Span::raw(" views"),
+            Span::raw(" views  "),
+            Span::styled("mouse", Style::default().fg(Color::DarkGray)),
+            Span::raw(" select/scroll"),
         ])];
         if state.tab != Tab::Timeline {
             if let Some(repo) = &state.repo {
@@ -683,5 +685,47 @@ mod tests {
     fn commit_prompt_helper_formats_message() {
         let text = commit_prompt_text("selected", "Ship it");
         assert!(text.to_string().contains("commit selected: Ship it"));
+    }
+
+    #[test]
+    fn footer_mentions_mouse_hints() {
+        let state = AppState {
+            tab: Tab::WorkingTree,
+            repo: None,
+            error: None,
+            diff: None,
+            diff_scroll: 0,
+            selected_files: vec![],
+            commit_prompt: None,
+            commit_target: CommitTarget::Selected,
+            ignore_prompt: None,
+            discard_prompt: None,
+            history: vec![],
+            history_diff: None,
+            timeline_diff: None,
+            redraw: false,
+            show_hex: false,
+            history_selected: 0,
+            timeline_selected: 0,
+            files_scroll: 0,
+            history_scroll: 0,
+            timeline_scroll: 0,
+            preview_kind: PreviewKind::Diff,
+        };
+        let footer_text = {
+            let sel_count = state.selected_files.len();
+            let mut lines = vec![Line::from(vec![Span::raw("q")])];
+            lines.push(Line::from(vec![
+                Span::styled("selected files", Style::default().fg(Color::DarkGray)),
+                Span::raw(": "),
+                Span::styled(sel_count.to_string(), Style::default().fg(Color::White)),
+            ]));
+            lines.push(Line::from(vec![
+                Span::styled("mouse", Style::default().fg(Color::DarkGray)),
+                Span::raw(" select/scroll"),
+            ]));
+            Text::from(lines)
+        };
+        assert!(footer_text.to_string().contains("mouse select/scroll"));
     }
 }
