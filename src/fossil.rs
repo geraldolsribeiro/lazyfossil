@@ -388,7 +388,7 @@ mod tests {
         let extras = parse_extra("tmp.log\n  \nnotes.txt\n.hidden\n");
         let merged = merge_files(tracked, status, extras);
 
-        assert_eq!(merged.len(), 7);
+        assert_eq!(merged.len(), 8);
         assert_eq!(merged.first().map(|f| f.path.as_str()), Some("README.md"));
         assert_eq!(merged.last().map(|f| f.path.as_str()), Some(".hidden"));
         assert!(merged
