@@ -1103,6 +1103,15 @@ mod tests {
             .contains("Resolve the conflict"));
     }
 
+    #[test]
+    fn notice_messages_use_marker_highlights() {
+        let app = App::new(false);
+        let missing = app.missing_file_message("gone.txt");
+        assert!(missing.contains("[[gone.txt]]"));
+        let conflict = app.conflict_message("conflict.txt");
+        assert!(conflict.contains("[[conflict.txt]]"));
+    }
+
 
     #[test]
     fn preview_kind_matches_file_type() {
