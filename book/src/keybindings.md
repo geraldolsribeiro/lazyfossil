@@ -4,8 +4,8 @@
 
 - `Up` / `Down`: move through the active list
 - `Tab`: switch between **Working tree**, **File history**, and **Timeline**
-- Mouse click: select an item
-- Mouse wheel / `PageUp` / `PageDown`: scroll the details pane; over the left list it moves the selection instead
+- Mouse click: select an item in the left pane
+- Mouse wheel / `PageUp` / `PageDown`: scroll the details pane; over the left pane it moves the selection instead
 
 ## Working tree actions
 

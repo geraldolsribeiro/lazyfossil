@@ -307,7 +307,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
             key_span("Tab", Color::Yellow),
             Span::raw(" views  "),
             Span::styled("mouse", Style::default().fg(Color::DarkGray)),
-            Span::raw(" select/scroll"),
+            Span::raw(" select/scroll left pane"),
         ])];
         if state.tab != Tab::Timeline {
             if let Some(repo) = &state.repo {
