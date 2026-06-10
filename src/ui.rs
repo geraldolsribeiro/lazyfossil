@@ -4,6 +4,8 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap};
 
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub fn draw(frame: &mut Frame, state: &mut AppState) {
     let mut cursor = None;
     let areas = Layout::default()
@@ -21,7 +23,11 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
             Tab::FileHistory => 1,
             Tab::Timeline => 2,
         })
-        .block(Block::default().borders(Borders::ALL).title("lazyfossil"));
+        .block(Block::default().borders(Borders::ALL).title(Line::from(vec![
+            Span::styled("lazy", Style::default().fg(Color::DarkGray)),
+            Span::styled("fossil", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw(format!(" v{}", APP_VERSION)),
+        ])));
     frame.render_widget(tabs, areas[0]);
 
     let body = Layout::default()
