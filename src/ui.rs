@@ -811,11 +811,11 @@ mod tests {
     #[test]
     fn preview_rendering_styles_notice_and_markdown() {
         let notice = color_preview(
-            "Preview unavailable for file.txt\nPossible rename detected: extra.txt".to_string(),
+            "Preview unavailable for file.txt\nPossible rename detected: extra.txt\nMissing file [[gone.txt]]\nConflict detected for [[conflict.txt]]".to_string(),
             PreviewKind::Notice,
         );
         let notice_lines = notice.lines.into_iter().collect::<Vec<_>>();
-        assert_eq!(notice_lines.len(), 2);
+        assert_eq!(notice_lines.len(), 4);
         assert_eq!(notice_lines[0].spans[0].style.fg, Some(Color::Yellow));
         assert_eq!(notice_lines[1].spans[0].style.fg, Some(Color::Cyan));
 
