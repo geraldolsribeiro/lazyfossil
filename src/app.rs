@@ -756,6 +756,10 @@ impl App {
         }
     }
 
+    fn mouse_in_left_pane(&self, column: u16, terminal_width: u16) -> bool {
+        column < terminal_width.saturating_mul(35) / 100
+    }
+
     fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
         self.refresh();
         loop {
@@ -826,11 +830,26 @@ impl App {
                             _ => {}
                         }
                     }
-                    Event::Mouse(mouse) => match mouse.kind {
-                        MouseEventKind::ScrollUp => self.scroll_diff_up(),
-                        MouseEventKind::ScrollDown => self.scroll_diff_down(),
-                        MouseEventKind::Down(_) => self.click_file(mouse.column, mouse.row),
-                        _ => {}
+                    Event::Mouse(mouse) => {
+                        let terminal_width = terminal.size().map(|s| s.width).unwrap_or(100);
+                        match mouse.kind {
+                            MouseEventKind::ScrollUp => {
+                                if self.mouse_in_left_pane(mouse.column, terminal_width) {
+                                    self.select_prev();
+                                } else {
+                                    self.scroll_diff_up();
+                                }
+                            }
+                            MouseEventKind::ScrollDown => {
+                                if self.mouse_in_left_pane(mouse.column, terminal_width) {
+                                    self.select_next();
+                                } else {
+                                    self.scroll_diff_down();
+                                }
+                            }
+                            MouseEventKind::Down(_) => self.click_file(mouse.column, mouse.row),
+                            _ => {}
+                        }
                     },
                     _ => {}
                 }
@@ -939,5 +958,12 @@ mod tests {
         assert_eq!(app.state.ignore_prompt.as_deref(), Some("tracked.txt"));
         app.handle_ignore_input(KeyCode::Char('n'));
         assert!(app.state.ignore_prompt.is_none());
+    }
+
+    #[test]
+    fn mouse_left_pane_detection_uses_terminal_split() {
+        let app = App::new(false);
+        assert!(app.mouse_in_left_pane(20, 100));
+        assert!(!app.mouse_in_left_pane(40, 100));
     }
 }
