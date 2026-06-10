@@ -109,9 +109,14 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         })
                         .collect()
                 };
+                let title = repo
+                    .files
+                    .get(state.repo.as_ref().map(|r| r.selected_file).unwrap_or(0))
+                    .map(|f| format!("File history: {}", f.path.clone()))
+                    .unwrap_or_else(|| "File history".to_string());
                 List::new(items)
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-                    .block(Block::default().borders(Borders::ALL).title("File history"))
+                    .block(Block::default().borders(Borders::ALL).title(title))
             }
             _ => {
                 file_state.select(Some(repo.selected_file));
@@ -192,6 +197,13 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     }
                 }
                 if let Some(entry) = state.history.get(state.history_selected) {
+                    lines.push(Line::from(vec![
+                        Span::styled("entry ", Style::default().fg(Color::DarkGray)),
+                        Span::styled(
+                            format!("{}/{}", state.history_selected + 1, state.history.len()),
+                            Style::default().fg(Color::White),
+                        ),
+                    ]));
                     let mut commit_line = vec![
                         Span::styled("commit ", Style::default().fg(Color::DarkGray)),
                         Span::styled(entry.rid.clone(), Style::default().fg(Color::Yellow)),
@@ -239,6 +251,13 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     ]));
                     lines.push(Line::from(""));
                     if let Some(entry) = repo.timeline.get(state.timeline_selected) {
+                        lines.push(Line::from(vec![
+                            Span::styled("entry ", Style::default().fg(Color::DarkGray)),
+                            Span::styled(
+                                format!("{}/{}", state.timeline_selected + 1, repo.timeline.len()),
+                                Style::default().fg(Color::White),
+                            ),
+                        ]));
                         let mut commit_line = vec![
                             Span::styled("commit ", Style::default().fg(Color::DarkGray)),
                             Span::styled(entry.rid.clone(), Style::default().fg(Color::Yellow)),
