@@ -768,7 +768,7 @@ impl App {
     }
 
     fn mouse_in_left_pane(&self, column: u16, terminal_width: u16) -> bool {
-        column < terminal_width.saturating_mul(35) / 100
+        column < terminal_width.saturating_mul(38) / 100
     }
 
     fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
@@ -1042,6 +1042,7 @@ mod tests {
     fn mouse_left_pane_detection_uses_terminal_split() {
         let app = App::new(false);
         assert!(app.mouse_in_left_pane(20, 100));
+        assert!(app.mouse_in_left_pane(37, 100));
         assert!(!app.mouse_in_left_pane(40, 100));
     }
 
