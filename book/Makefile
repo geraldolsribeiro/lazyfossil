@@ -1,5 +1,5 @@
 .PHONY: all
-all: build
+all: upload
 
 .PHONY: build
 build:
