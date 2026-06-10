@@ -127,7 +127,11 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .unwrap_or_else(|| "Select a file to view diff".to_string());
                 Paragraph::new(color_preview(diff, state.preview_kind))
                     .scroll((state.diff_scroll, 0))
-                    .block(Block::default().borders(Borders::ALL).title(preview_title(state.preview_kind)))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title(preview_title(state.preview_kind)),
+                    )
                     .wrap(Wrap { trim: false })
             }
             Tab::FileHistory => {
@@ -140,7 +144,10 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                         ]));
                         lines.push(Line::from(vec![
                             Span::styled("entries ", Style::default().fg(Color::DarkGray)),
-                            Span::styled(state.history.len().to_string(), Style::default().fg(Color::White)),
+                            Span::styled(
+                                state.history.len().to_string(),
+                                Style::default().fg(Color::White),
+                            ),
                         ]));
                         lines.push(Line::from(""));
                     }
@@ -169,7 +176,11 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 lines.extend(color_preview(diff, PreviewKind::Diff).lines);
                 Paragraph::new(Text::from(lines))
                     .scroll((state.diff_scroll, 0))
-                    .block(Block::default().borders(Borders::ALL).title("File history details"))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("File history details"),
+                    )
                     .wrap(Wrap { trim: false })
             }
             Tab::Timeline => {
@@ -177,7 +188,10 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 if let Some(repo) = &state.repo {
                     lines.push(Line::from(vec![
                         Span::styled("entries ", Style::default().fg(Color::DarkGray)),
-                        Span::styled(repo.timeline.len().to_string(), Style::default().fg(Color::White)),
+                        Span::styled(
+                            repo.timeline.len().to_string(),
+                            Style::default().fg(Color::White),
+                        ),
                     ]));
                     lines.push(Line::from(""));
                     if let Some(entry) = repo.timeline.get(state.timeline_selected) {
@@ -205,7 +219,11 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 lines.extend(color_preview(diff, PreviewKind::Diff).lines);
                 Paragraph::new(Text::from(lines))
                     .scroll((state.diff_scroll, 0))
-                    .block(Block::default().borders(Borders::ALL).title("Timeline details"))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("Timeline details"),
+                    )
                     .wrap(Wrap { trim: false })
             }
         }
@@ -299,7 +317,8 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 Span::styled(sel_count.to_string(), Style::default().fg(Color::White)),
             ]));
         }
-        Paragraph::new(Text::from(lines)).block(Block::default().borders(Borders::TOP).title("Shortcuts"))
+        Paragraph::new(Text::from(lines))
+            .block(Block::default().borders(Borders::TOP).title("Shortcuts"))
     };
 
     frame.render_widget(footer, areas[2]);
@@ -520,10 +539,18 @@ fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
                             Style::default().fg(Color::Reset)
                         }
                     }
-                    PreviewKind::Plain | PreviewKind::Hex | PreviewKind::Notice => {
-                        if line.starts_with("Preview unavailable for ") {
+                    PreviewKind::Plain | PreviewKind::Hex => Style::default().fg(Color::Reset),
+                    PreviewKind::Notice => {
+                        if line.starts_with("Preview unavailable for ")
+                            || line.starts_with("Missing file ")
+                            || line.starts_with("Conflict detected for ")
+                        {
                             Style::default()
                                 .fg(Color::Yellow)
+                                .add_modifier(Modifier::BOLD)
+                        } else if line.starts_with("Possible rename detected:") {
+                            Style::default()
+                                .fg(Color::Cyan)
                                 .add_modifier(Modifier::BOLD)
                         } else {
                             Style::default().fg(Color::Reset)

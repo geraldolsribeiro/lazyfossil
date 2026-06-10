@@ -178,6 +178,13 @@ impl App {
             .filter(|diff| !diff.trim().is_empty())
             .or_else(|| self.client.checkin_diff(&entry.rid).ok())
             .filter(|diff| !diff.trim().is_empty());
+        if self.state.history_diff.is_none() {
+            self.state.history_diff = Some(format!(
+                "No diff available for [[{}]] at commit [[{}]]",
+                path, entry.rid
+            ));
+            self.state.preview_kind = PreviewKind::Notice;
+        }
     }
 
     fn refresh_timeline(&mut self) {
@@ -224,7 +231,7 @@ impl App {
                         self.state.preview_kind = PreviewKind::Notice;
                         if let Some(renamed) = self.find_renamed_extra(&file.path) {
                             format!(
-                                "Missing file [[{}]]\nPossible renamed to [[{}]]",
+                                "Missing file [[{}]]\nPossible rename detected: [[{}]]\nUse commit or discard actions from the working tree if needed.",
                                 file.path, renamed
                             )
                         } else {
@@ -233,6 +240,13 @@ impl App {
                                 file.path
                             )
                         }
+                    }
+                    "conflict" => {
+                        self.state.preview_kind = PreviewKind::Notice;
+                        format!(
+                            "Conflict detected for [[{}]]\nResolve the conflict before committing.",
+                            file.path
+                        )
                     }
                     _ if self.state.show_hex => {
                         self.state.preview_kind = PreviewKind::Hex;
@@ -271,7 +285,8 @@ impl App {
                                 match fs::read(&path) {
                                     Ok(bytes) => match String::from_utf8(bytes) {
                                         Ok(content) => {
-                                            self.state.preview_kind = if file.path.ends_with(".md") {
+                                            self.state.preview_kind = if file.path.ends_with(".md")
+                                            {
                                                 PreviewKind::Markdown
                                             } else {
                                                 PreviewKind::Plain
