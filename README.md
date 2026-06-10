@@ -8,6 +8,9 @@
 
 ![lazyfossil logo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/lazyfossil_logo.png)
 
+* <https://lazyfossil.org>
+* <https://chiselapp.com/user/geraldo/repository/lazyfossil/>
+
 ## Project goals
 
 **lazyfossil** helps you work with **Fossil SCM** from the terminal in a simpler way:
@@ -60,100 +63,49 @@ There are mirror repositories at
 
 ## Screenshots and demos
 
-**lazyfossil** is currently in alpha, but it is already usable. There is still plenty to polish.
+**lazyfossil** is still in alpha, but it is already useful for everyday Fossil work. This project uses lazyfossil itself while we continue refining it, so the screenshots and demos reflect real use rather than a polished finish. If you work with Fossil from the terminal, try it and see whether it fits your workflow.
 
-![Screenshot 01](doc/images/screenshot_01.png)
+lazyfossil’s main screen is built around three views:
 
-![Screenshot 02](doc/images/screenshot_02.png)
+![working tree demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/working_tree.gif)
 
-![Screenshot 03](doc/images/screenshot_03.png)
+![File history demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/file_history.gif)
 
-## Features
+![Timeline demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/timeline.gif)
 
-### Repository browsing
-- Fossil checkout detection
-- Full project file list plus extra files
-- Diff/details pane with binary-safe preview
-- Timeline/history view
-- File-history timeline for the selected path
-- Hidden-file listing (`extras --dotfiles`)
-- Keyboard and mouse navigation
+## Why use lazyfossil
+- Keep Fossil work inside a fast terminal UI
+- See files, history, and diffs without leaving the app
+- Commit only what you want, without a staging area
+- Handle sync, ignore, and discard tasks from one place
+- Stay productive even for binary files and missing-file cases
 
-### Commit and sync flow
-- Temporary file selection for commit with `Space`
-- Commit selected files, the current file, or all files
-- Automatic add extra-files before commit
-- Ignore-file editing via `.fossil-settings/ignore-glob`
-- Sync with the remote via `p` (pull) / `P` (push)
-- Binary-file handling before commit via `binary-glob`
-- Confirmation dialogs for ignore and discard actions
-
-### Preview and UI polish
-- Binary preview fallback with a friendly notice
-- `o` to open binaries externally
-- `H` hex dump toggle for binary files
-- Tab-expanded text previews (for example, Makefiles)
-- Compact shortcut status line
-- Footer and input UX improvements
-- Reusable ASCII logo text asset
-
-## Commit flow
-
-Fossil does not use a staging area like git does.
-Instead, lazyfossil builds commit commands like:
-
-```bash
-fossil commit -m "commit message" file1 file2 file3
-```
-
-Extra files are added automatically before commit when needed.
-
-Binary files are handled by setting:
-
-```bash
-fossil settings binary-glob "*.png,*.jpg,*.jpeg,*.gif,*.ico"
-```
-
-## Keybinds
-
-### Navigation
-- `Up` / `Down`: move between files
-- `Tab`: switch between Working tree and History
-- Mouse click: select a file
-- Mouse wheel: scroll the diff/details pane
-
-### File actions
-- `Space`: toggle the selected file for commit
-- `e`: open the current file in `$EDITOR`
-- `o`: open the current file in the default program for its file type
-- `d`: discard the current file
-- `i`: add the current file to `.fossil-settings/ignore-glob`
-
-### Commit and sync
-- `c`: commit selected files
-- `f`: commit the current file
-- `a`: commit all files
-- `p` / `P`: sync with the remote
-
-### General
-- `r`: refresh
-- `q`: quit
+## What it gives you
+- A clear view of your working tree and extras
+- File history and repository timeline in the same interface
+- Helpful previews for text, binary, and hex views
+- Simple keyboard and mouse navigation
+- Quick commit and sync actions with confirmation prompts
+- Better handling for common Fossil workflows
 
 ## Roadmap
 
 ### Done
-- Working-tree MVP
-- History timeline basics
+- Working tree, file history, and timeline views
 - Temporary selection-based commit flow
 - Inline commit message prompt
 - Ignore-file support
 - Sync support
 - Binary preview fallback
+- XDG config file support
+- Book documentation for the main views and config
+- VHS demo tapes for the main flows
 
 ### Next
-- Commit details and file history in the history pane
-- Footer and status layout polish
+- UI polish and layout tweaks
 - Better mouse interactions and scrolling
+- More tests for parsing and rendering
+- Optional follow-up refinements
 
 ## Versioning
 
@@ -167,11 +119,14 @@ Current version: `0.7.0`.
 
 ## Credits
 
+### [fossil-scm.org](https://fossil-scm.org/)
+The Fossil SCM project is the version control system lazyfossil is built around.
+
 ### [pi.dev](https://pi.dev)
 Pi provides the agent harness used to develop and refine this project. Its tooling made it easier to iterate quickly, validate changes, and improve the TUI with confidence.
 
 ### [crates.io/crates/lazyfossil](https://crates.io/crates/lazyfossil)
-The crates.io listing is the distribution channel for the Rust application, helping make lazyfossil available to the broader Rust ecosystem and simplifying installation and release management.
+The crates.io is the distribution channel for the Rust application, helping make lazyfossil available to the broader Rust ecosystem and simplifying installation and release management.
 
 ### [emojicombos.com/lazyfossil](https://emojicombos.com/lazyfossil)
 This source provided the project logo artwork used in the README and assets, giving lazyfossil a recognizable visual identity.

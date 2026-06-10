@@ -5,6 +5,10 @@ all: build
 build:
 	mdbook build
 
+.PHONY: serve
+serve:
+	mdbook serve
+
 .PHONY: upload
 upload: build
 	tar zcvf book.tgz book

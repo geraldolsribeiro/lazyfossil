@@ -22,3 +22,8 @@ This directory contains source tapes for reproducible terminal demos used in the
 - Prefer deterministic interactions and visible key presses
 - Re-export screenshots/GIFs/videos from these tapes when the UI changes
 - Store exported images/video in Cloudflare R2 bucket
+- The base URL for images is `https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/lazyfossil/filename.gif`
+
+## Theme
+
+- Preview at <https://github.com/flemay/vhs-themes/tree/themes>

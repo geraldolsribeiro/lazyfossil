@@ -2,11 +2,15 @@ Q=@
 TAPES=$(filter-out terminal_config.tape,$(wildcard *.tape))
 GIFS=$(TAPES:.tape=.gif)
 
-%.gif: %.tape ../target/release/lazyfossil
+%.gif: %.tape terminal_config.tape ../target/release/lazyfossil
 	$(Q)echo "Rendering $@"
 	$(Q)PATH=../target/release/:$(PATH) vhs $< -o tmp.gif
-	$(Q)gifsicle -O3 --lossy=100 tmp.gif -o $@
+	$(Q)gifsicle -O3 --lossy=80 tmp.gif -o $@
 	$(Q)rm tmp.gif
+
+# %.gif: %.tape terminal_config.tape ../target/release/lazyfossil
+# 	$(Q)echo "Rendering $@"
+# 	$(Q)PATH=../target/release/:$(PATH) vhs $< -o $@
 
 .PHONY: all
 all: $(GIFS)

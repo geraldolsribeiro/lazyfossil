@@ -3,12 +3,9 @@
 ## Repository browsing
 
 - Fossil checkout detection
-- Full project file list plus extra files
-- Diff/details pane with binary-safe preview
-- Timeline/history view
-- File-history timeline for the selected path
 - Hidden-file listing with `extras --dotfiles`
 - Keyboard and mouse navigation
+- See the separate [Repository browsing](./repository_browsing.md) chapter for the three main views.
 
 ## Commit and sync flow
 
