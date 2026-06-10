@@ -819,6 +819,12 @@ mod tests {
         assert_eq!(notice_lines[0].spans[0].style.fg, Some(Color::Yellow));
         assert_eq!(notice_lines[1].spans[0].style.fg, Some(Color::Cyan));
 
+        let missing = color_preview(
+            "Missing file [[gone.txt]]\nResolve the conflict before committing.".to_string(),
+            PreviewKind::Notice,
+        );
+        assert!(missing.to_string().contains("gone.txt"));
+
         let md = color_preview("# Heading\n- item".to_string(), PreviewKind::Markdown);
         let md_lines = md.lines.into_iter().collect::<Vec<_>>();
         assert_eq!(md_lines[0].spans[0].style.fg, Some(Color::Cyan));

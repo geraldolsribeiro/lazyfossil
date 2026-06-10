@@ -1103,6 +1103,7 @@ mod tests {
             .contains("Resolve the conflict"));
     }
 
+
     #[test]
     fn preview_kind_matches_file_type() {
         assert!(matches!(
