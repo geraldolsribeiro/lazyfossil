@@ -342,7 +342,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
             key_span("a", Color::Yellow),
             Span::raw(" all/none  "),
             key_span("p", Color::Yellow),
-            Span::raw(" pull  "),
+            Span::raw(" sync  "),
             key_span("e", Color::Yellow),
             Span::raw(" edit  "),
             key_span("o", Color::Yellow),
