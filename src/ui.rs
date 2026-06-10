@@ -294,7 +294,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             key_span("d", Color::Yellow),
             Span::raw(" discard  "),
             key_span("H", Color::Yellow),
-            Span::raw(" hex"),
+            Span::raw(" hex  "),
+            key_span("Tab", Color::Yellow),
+            Span::raw(" views"),
         ])];
         if state.tab != Tab::Timeline {
             if let Some(repo) = &state.repo {
