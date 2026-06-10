@@ -3,20 +3,21 @@
 ## Roadmap
 
 ### Done
-
-- Working-tree MVP
-- History timeline basics
+- Working tree, file history, and timeline views
 - Temporary selection-based commit flow
 - Inline commit message prompt
 - Ignore-file support
 - Sync support
 - Binary preview fallback
+- XDG config file support
+- Book documentation for the main views and config
+- VHS demo tapes for the main flows
 
 ### Next
-
-- Commit details and file history in the history pane
-- Footer and status layout polish
+- UI polish and layout tweaks
 - Better mouse interactions and scrolling
+- More tests for parsing and rendering
+- Optional follow-up refinements
 
 ## Versioning
 

@@ -1,6 +1,6 @@
 # Terminal settings
 Set Shell bash
-Set FontSize 14
+Set FontSize 18
 Set Padding 6 
 Set Theme "TokyoNight"
 Set Framerate 6
