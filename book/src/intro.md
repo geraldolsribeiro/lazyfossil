@@ -6,8 +6,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/geraldolsribeiro/lazyfossil)](https://github.com/geraldolsribeiro/lazyfossil/stargazers)
 ![Crates.io Total Downloads](https://img.shields.io/crates/d/lazyfossil)
 
-
-![logo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/lazyfossil_logo.png)
+![lazyfossil logo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/lazyfossil_logo.png)
 
 **lazyfossil** helps you work with **Fossil SCM** from the terminal in a simpler way:
 browse files, see history, preview changes, and commit or sync without extra friction.
@@ -16,7 +15,6 @@ browse files, see history, preview changes, and commit or sync without extra fri
 * <https://chiselapp.com/user/geraldo/repository/lazyfossil/>
 * <https://github.com/geraldolsribeiro/lazyfossil>
 * <https://crates.io/crates/lazyfossil>
-
 
 ## Quick start
 

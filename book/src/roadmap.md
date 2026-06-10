@@ -4,7 +4,7 @@
 
 ### Now
 - UI polish
-  - dynamic Details pane titles
+  - dynamic details pane titles
   - preview styling per file type
   - footer and hint cleanup
   - spacing and layout tweaks

@@ -1,6 +1,6 @@
 # File history
 
-The **File history** tab shows the commit history for the file currently selected in the working-tree list.
+The **File history** tab shows the commit history for the file currently selected in the working tree list.
 
 ![File history](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/file_history.gif)
 

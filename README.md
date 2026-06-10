@@ -68,7 +68,7 @@ There are mirror repositories at
 
 **lazyfossil** is still in alpha, but it is already useful for everyday Fossil work. This project uses lazyfossil itself while we continue refining it, so the screenshots and demos reflect real use rather than a polished finish. If you work with Fossil from the terminal, try it and see whether it fits your workflow.
 
-lazyfossil’s main screen is built around three views:
+lazyfossil’s main screen is built around three views (Working tree, File history, and Timeline):
 
 ![working tree demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/working_tree.gif)
 
@@ -79,7 +79,7 @@ lazyfossil’s main screen is built around three views:
 ## Why use lazyfossil
 - Keep Fossil work inside a fast terminal UI
 - See files, history, and diffs without leaving the app
-- Commit only what you want, without a staging area
+- Commit selected files or the current file, without a staging area
 - Handle sync, ignore, and discard tasks from one place
 - Stay productive even for binary files and missing-file cases
 
@@ -87,8 +87,9 @@ lazyfossil’s main screen is built around three views:
 - A clear view of your working tree and extras
 - File history and repository timeline in the same interface
 - Helpful previews for text, binary, and hex views
-- Simple keyboard and mouse navigation
+- Simple keyboard and mouse navigation, including left-pane selection scrolling
 - Quick commit and sync actions with confirmation prompts
+- Toggle all/none selection with `a`
 - Better handling for common Fossil workflows
 
 ## Roadmap

@@ -4,14 +4,15 @@
 
 - Fossil checkout detection
 - Hidden-file listing with `extras --dotfiles`
-- Keyboard and mouse navigation
+- Keyboard and mouse navigation, including left-pane selection scrolling
 - Context-aware details pane titles
 - See the separate [Repository browsing](./repository_browsing.md) chapter for the three main views.
 
 ## Commit and sync flow
 
 - Temporary file selection for commit with `Space`
-- Commit selected files, the current file, or all files
+- Toggle all/none selection with `a`
+- Commit selected files or the current file
 - Automatic add of extra files before commit
 - Ignore-file editing via `.fossil-settings/ignore-glob`
 - Sync with the remote via `p` (pull) / `P` (push)

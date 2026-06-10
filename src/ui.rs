@@ -72,7 +72,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 };
                 List::new(items)
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-                    .block(Block::default().borders(Borders::ALL).title("History"))
+                    .block(Block::default().borders(Borders::ALL).title("File history"))
             }
             _ => {
                 file_state.select(Some(repo.selected_file));

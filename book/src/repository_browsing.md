@@ -1,6 +1,6 @@
 # Repository browsing
 
-lazyfossil’s main screen is built around three views:
+lazyfossil’s main screen is built around three views (Working tree, File history, and Timeline):
 
 ## Working tree
 
@@ -24,6 +24,7 @@ Use it to:
 - browse commits that touched the selected path
 - inspect commit metadata and file-specific diffs
 - follow the evolution of one file over time
+- review the selected file without leaving the working tree workflow
 
 ![File history demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/file_history.gif)
 
