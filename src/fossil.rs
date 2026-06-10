@@ -488,6 +488,21 @@ mod tests {
     }
 
     #[test]
+    fn parses_status_entries_for_missing_and_clean_files() {
+        let status = parse_status("MISSING gone.txt\nCHECKED-OUT clean.txt\nEDITED dirty.txt\n");
+        assert_eq!(status.len(), 3);
+        assert!(status
+            .iter()
+            .any(|f| f.path == "gone.txt" && f.status == "missing"));
+        assert!(status
+            .iter()
+            .any(|f| f.path == "clean.txt" && f.status == "checked-out"));
+        assert!(status
+            .iter()
+            .any(|f| f.path == "dirty.txt" && f.status == "edited"));
+    }
+
+    #[test]
     fn updates_ignore_file_contents() {
         let dir = std::env::temp_dir().join(format!("lazyfossil-test-{}", std::process::id()));
         let settings = dir.join(".fossil-settings");
