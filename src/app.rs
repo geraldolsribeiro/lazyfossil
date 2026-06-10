@@ -77,6 +77,9 @@ pub struct AppState {
     pub show_hex: bool,
     pub history_selected: usize,
     pub timeline_selected: usize,
+    pub files_scroll: usize,
+    pub history_scroll: usize,
+    pub timeline_scroll: usize,
     pub preview_kind: PreviewKind,
 }
 
@@ -118,6 +121,9 @@ impl App {
                 show_hex: false,
                 history_selected: 0,
                 timeline_selected: 0,
+                files_scroll: 0,
+                history_scroll: 0,
+                timeline_scroll: 0,
                 preview_kind: PreviewKind::Diff,
             },
         }
@@ -741,6 +747,7 @@ impl App {
         if let Some(repo) = &mut self.state.repo {
             match self.state.tab {
                 Tab::Timeline => {
+                    let index = self.state.timeline_scroll.saturating_add(index);
                     if index < repo.timeline.len() {
                         self.state.timeline_selected = index;
                         self.refresh_timeline();
@@ -748,6 +755,7 @@ impl App {
                     }
                 }
                 Tab::FileHistory => {
+                    let index = self.state.history_scroll.saturating_add(index);
                     if index < self.state.history.len() {
                         self.state.history_selected = index;
                         self.refresh_history();
@@ -755,6 +763,7 @@ impl App {
                     }
                 }
                 _ => {
+                    let index = self.state.files_scroll.saturating_add(index);
                     if index < repo.files.len() {
                         repo.selected_file = index;
                         self.refresh_views();
@@ -775,7 +784,7 @@ impl App {
                 terminal.clear()?;
                 self.state.redraw = false;
             }
-            terminal.draw(|frame| ui::draw(frame, &self.state))?;
+            terminal.draw(|frame| ui::draw(frame, &mut self.state))?;
             if event::poll(Duration::from_millis(150))? {
                 match event::read()? {
                     Event::Key(KeyEvent { code, .. }) => {
@@ -983,6 +992,15 @@ mod tests {
     fn mouse_right_pane_is_not_treated_as_list_click_area() {
         let app = App::new(false);
         assert!(!app.mouse_in_left_pane(80, 100));
+    }
+
+    #[test]
+    fn click_file_uses_scrolled_offsets() {
+        let mut app = App::new(false);
+        app.state.repo = Some(repo());
+        app.state.files_scroll = 1;
+        app.click_file(1, 4);
+        assert_eq!(app.state.repo.as_ref().unwrap().selected_file, 1);
     }
 
     #[test]

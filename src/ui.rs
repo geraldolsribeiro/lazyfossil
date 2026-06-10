@@ -4,7 +4,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap};
 
-pub fn draw(frame: &mut Frame, state: &AppState) {
+pub fn draw(frame: &mut Frame, state: &mut AppState) {
     let mut cursor = None;
     let areas = Layout::default()
         .direction(Direction::Vertical)
@@ -29,7 +29,11 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         .constraints([Constraint::Percentage(35), Constraint::Percentage(65)])
         .split(areas[1]);
 
-    let mut file_state = ListState::default();
+    let mut file_state = match state.tab {
+        Tab::WorkingTree => ListState::default().with_offset(state.files_scroll),
+        Tab::FileHistory => ListState::default().with_offset(state.history_scroll),
+        Tab::Timeline => ListState::default().with_offset(state.timeline_scroll),
+    };
     let left = if let Some(repo) = &state.repo {
         match state.tab {
             Tab::Timeline => {
@@ -237,6 +241,11 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         .block(Block::default().borders(Borders::ALL).title("Status"))
     };
     frame.render_stateful_widget(left, body[0], &mut file_state);
+    match state.tab {
+        Tab::WorkingTree => state.files_scroll = file_state.offset(),
+        Tab::FileHistory => state.history_scroll = file_state.offset(),
+        Tab::Timeline => state.timeline_scroll = file_state.offset(),
+    }
     frame.render_widget(right, body[1]);
 
     let footer = if let Some(msg) = &state.commit_prompt {
@@ -634,6 +643,9 @@ mod tests {
             show_hex: false,
             history_selected: 0,
             timeline_selected: 0,
+            files_scroll: 0,
+            history_scroll: 0,
+            timeline_scroll: 0,
             preview_kind: PreviewKind::Diff,
         };
         let footer = if state.tab == Tab::WorkingTree {
