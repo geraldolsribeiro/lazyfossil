@@ -703,10 +703,10 @@ impl App {
     }
 
     fn scroll_diff_up(&mut self) {
-        self.state.diff_scroll = self.state.diff_scroll.saturating_sub(1);
+        self.state.diff_scroll = self.state.diff_scroll.saturating_sub(3);
     }
     fn scroll_diff_down(&mut self) {
-        self.state.diff_scroll = self.state.diff_scroll.saturating_add(1);
+        self.state.diff_scroll = self.state.diff_scroll.saturating_add(3);
     }
 
     fn select_next(&mut self) {
