@@ -21,3 +21,8 @@ upload:
 	rclone copy ./ r2:lazyfossil/ --include "*.gif" --transfers 16 --progress
 	rclone copy ./ r2:lazyfossil/ --include "*.png" --transfers 16 --progress
 	rclone copy ../doc/images/lazyfossil_logo.png r2:lazyfossil --s3-no-check-bucket
+
+.PHONY: record
+record:
+	$(Q)echo "Type exit when you finish the demo"
+	$(Q)PATH=../target/release/:$(PATH) vhs record > new_tape.tape
