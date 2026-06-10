@@ -96,12 +96,8 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                             "conflict" => "C",
                             _ => "✓",
                         };
-                        let mut item = ListItem::new(format!(
-                            "{}{} {}",
-                            prefix,
-                            selected,
-                            format!("{} {}", kind, f.path)
-                        ));
+                        let mut item =
+                            ListItem::new(format!("{}{} {} {}", prefix, selected, kind, f.path));
                         if f.status == "checked-out" {
                             item = item.style(Style::default().fg(Color::Green));
                         } else if f.status == "edited" {
@@ -211,7 +207,6 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         let target = match state.commit_target {
             CommitTarget::Selected => "selected",
             CommitTarget::Current => "current",
-            CommitTarget::All => "all",
         };
         let text = Text::from(vec![
             Line::from(vec![

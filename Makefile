@@ -1,11 +1,13 @@
 .PHONY: all
 all:
-	rm -f target/debug/lazyfossil
-	rm -f target/release/lazyfossil
-	touch src/*.rs
+	cargo run --release -- --debug
+
+.PHONY: check
+check:
+	/home/geraldo/git/geraldolsribeiro/cargo/target/release/cargo \
+		clippy --fix --allow-dirty --allow-staged
 	cargo fmt --all
 	cargo fmt --all -- --check
-	cargo run --release -- --debug
 
 .PHONY: doc
 doc:

@@ -83,7 +83,6 @@ pub struct AppState {
 pub enum CommitTarget {
     Selected,
     Current,
-    All,
 }
 
 impl App {
@@ -265,7 +264,7 @@ impl App {
                 }
                 '\t' => {
                     let spaces = TABSTOP - (col % TABSTOP);
-                    out.extend(std::iter::repeat(' ').take(spaces));
+                    out.extend(std::iter::repeat_n(' ', spaces));
                     col += spaces;
                 }
                 _ => {
@@ -507,7 +506,6 @@ impl App {
                 }
             }
             CommitTarget::Current => current_path.into_iter().collect::<Vec<_>>(),
-            CommitTarget::All => repo.files.iter().map(|f| f.path.clone()).collect(),
         };
         if paths.is_empty() {
             self.state.error = Some("No file selected".to_string());

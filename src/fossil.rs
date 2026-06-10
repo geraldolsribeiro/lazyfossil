@@ -119,10 +119,6 @@ impl FossilClient {
         self.run(&build_commit_args(paths, message))
     }
 
-    pub fn commit_all(&self, message: &str) -> std::result::Result<String, FossilError> {
-        self.run(&["commit", "-m", message])
-    }
-
     pub fn ignore_glob(&self, pattern: &str) -> std::result::Result<String, FossilError> {
         let root = self
             .checkout_root
@@ -204,7 +200,7 @@ impl FossilClient {
     }
 }
 
-fn build_add_args<'a>(paths: &'a [String]) -> Vec<&'a str> {
+fn build_add_args(paths: &[String]) -> Vec<&str> {
     let mut args = vec!["add"];
     for path in paths {
         args.push(path.as_str());
@@ -220,7 +216,7 @@ fn build_commit_args<'a>(paths: &'a [String], message: &'a str) -> Vec<&'a str> 
     args
 }
 
-fn build_rm_args<'a>(paths: &'a [String]) -> Vec<&'a str> {
+fn build_rm_args(paths: &[String]) -> Vec<&str> {
     let mut args = vec!["rm"];
     for path in paths {
         args.push(path.as_str());
@@ -342,7 +338,7 @@ fn merge_files(
     status: Vec<FileStatus>,
     extras: Vec<FileStatus>,
 ) -> Vec<FileStatus> {
-    for file in status.into_iter().chain(extras.into_iter()) {
+    for file in status.into_iter().chain(extras) {
         if let Some(existing) = tracked.iter_mut().find(|entry| entry.path == file.path) {
             existing.status = file.status;
         } else {
