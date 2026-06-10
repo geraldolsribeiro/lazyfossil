@@ -24,5 +24,5 @@ browse files, see history, preview changes, and commit or sync without extra fri
 2. Go to your project checkout
 3. Type `lazyfossil`
 4. Browse changes and history
-4. Press `q` to quit
+5. Press `q` to quit
 

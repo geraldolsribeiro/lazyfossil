@@ -77,6 +77,16 @@ pub struct AppState {
     pub show_hex: bool,
     pub history_selected: usize,
     pub timeline_selected: usize,
+    pub preview_kind: PreviewKind,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum PreviewKind {
+    Diff,
+    Plain,
+    Markdown,
+    Hex,
+    Notice,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -108,6 +118,7 @@ impl App {
                 show_hex: false,
                 history_selected: 0,
                 timeline_selected: 0,
+                preview_kind: PreviewKind::Diff,
             },
         }
     }
@@ -198,6 +209,7 @@ impl App {
                 let path = self.display_path(&file.path);
                 self.state.diff = Some(match file.status.as_str() {
                     "missing" => {
+                        self.state.preview_kind = PreviewKind::Notice;
                         if let Some(renamed) = self.find_renamed_extra(&file.path) {
                             format!(
                                 "Missing file [[{}]]\nPossible renamed to [[{}]]",
@@ -210,40 +222,69 @@ impl App {
                             )
                         }
                     }
-                    _ if self.state.show_hex => match fs::read(&path) {
-                        Ok(bytes) => Self::hexdump(&bytes),
-                        Err(err) => format!("content error for {}: {}", file.path, err),
-                    },
+                    _ if self.state.show_hex => {
+                        self.state.preview_kind = PreviewKind::Hex;
+                        match fs::read(&path) {
+                            Ok(bytes) => Self::hexdump(&bytes),
+                            Err(err) => format!("content error for {}: {}", file.path, err),
+                        }
+                    }
                     "extra" | "checked-out" => match fs::read(&path) {
                         Ok(bytes) => match String::from_utf8(bytes) {
                             Ok(content) => {
+                                self.state.preview_kind = if file.path.ends_with(".md") {
+                                    PreviewKind::Markdown
+                                } else {
+                                    PreviewKind::Plain
+                                };
                                 if content.trim().is_empty() {
                                     format!("Empty file: {}", file.path)
                                 } else {
                                     Self::expand_tabs(&content)
                                 }
                             }
-                            Err(_) => Self::binary_preview_notice(&file.path),
+                            Err(_) => {
+                                self.state.preview_kind = PreviewKind::Notice;
+                                Self::binary_preview_notice(&file.path)
+                            }
                         },
-                        Err(err) => format!("content error for {}: {}", file.path, err),
+                        Err(err) => {
+                            self.state.preview_kind = PreviewKind::Notice;
+                            format!("content error for {}: {}", file.path, err)
+                        }
                     },
                     _ => match self.client.diff_for(&file.path) {
                         Ok(diff) => {
                             if diff.trim().is_empty() {
                                 match fs::read(&path) {
                                     Ok(bytes) => match String::from_utf8(bytes) {
-                                        Ok(content) => Self::expand_tabs(&content),
-                                        Err(_) => Self::binary_preview_notice(&file.path),
+                                        Ok(content) => {
+                                            self.state.preview_kind = if file.path.ends_with(".md") {
+                                                PreviewKind::Markdown
+                                            } else {
+                                                PreviewKind::Plain
+                                            };
+                                            Self::expand_tabs(&content)
+                                        }
+                                        Err(_) => {
+                                            self.state.preview_kind = PreviewKind::Notice;
+                                            Self::binary_preview_notice(&file.path)
+                                        }
                                     },
                                     Err(err) => {
+                                        self.state.preview_kind = PreviewKind::Notice;
                                         format!("diff/content error for {}: {}", file.path, err)
                                     }
                                 }
                             } else {
+                                self.state.preview_kind = PreviewKind::Diff;
                                 diff
                             }
                         }
-                        Err(err) => format!("diff error for {}: {}", file.path, err),
+                        Err(err) => {
+                            self.state.preview_kind = PreviewKind::Notice;
+                            format!("diff error for {}: {}", file.path, err)
+                        }
                     },
                 });
             } else {

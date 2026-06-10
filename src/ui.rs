@@ -1,4 +1,4 @@
-use crate::app::{AppState, CommitTarget, Tab};
+use crate::app::{AppState, CommitTarget, PreviewKind, Tab};
 use ratatui::prelude::*;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
@@ -125,9 +125,9 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .diff
                     .clone()
                     .unwrap_or_else(|| "Select a file to view diff".to_string());
-                Paragraph::new(color_diff(diff))
+                Paragraph::new(color_preview(diff, state.preview_kind))
                     .scroll((state.diff_scroll, 0))
-                    .block(Block::default().borders(Borders::ALL).title("Details"))
+                    .block(Block::default().borders(Borders::ALL).title(preview_title(state.preview_kind)))
                     .wrap(Wrap { trim: false })
             }
             Tab::FileHistory => {
@@ -153,10 +153,10 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .history_diff
                     .clone()
                     .unwrap_or_else(|| "No history diff available".to_string());
-                lines.extend(color_diff(diff).lines);
+                lines.extend(color_preview(diff, PreviewKind::Diff).lines);
                 Paragraph::new(Text::from(lines))
                     .scroll((state.diff_scroll, 0))
-                    .block(Block::default().borders(Borders::ALL).title("Details"))
+                    .block(Block::default().borders(Borders::ALL).title("Diff"))
                     .wrap(Wrap { trim: false })
             }
             Tab::Timeline => {
@@ -184,10 +184,10 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .timeline_diff
                     .clone()
                     .unwrap_or_else(|| "No timeline diff available".to_string());
-                lines.extend(color_diff(diff).lines);
+                lines.extend(color_preview(diff, PreviewKind::Diff).lines);
                 Paragraph::new(Text::from(lines))
                     .scroll((state.diff_scroll, 0))
-                    .block(Block::default().borders(Borders::ALL).title("Details"))
+                    .block(Block::default().borders(Borders::ALL).title("Diff"))
                     .wrap(Wrap { trim: false })
             }
         }
@@ -440,7 +440,17 @@ fn info_box_lines() -> Vec<Line<'static>> {
     ]
 }
 
-fn color_diff(diff: String) -> Text<'static> {
+fn preview_title(kind: PreviewKind) -> &'static str {
+    match kind {
+        PreviewKind::Diff => "Diff",
+        PreviewKind::Plain => "Plain preview",
+        PreviewKind::Markdown => "Markdown preview",
+        PreviewKind::Hex => "Hex preview",
+        PreviewKind::Notice => "Preview",
+    }
+}
+
+fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
     Text::from(
         diff.lines()
             .map(|line| {
@@ -453,22 +463,48 @@ fn color_diff(diff: String) -> Text<'static> {
                         Span::raw(" for hex view"),
                     ]);
                 }
-                let style = if line.starts_with("Preview unavailable for ") {
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD)
-                } else if line.starts_with("+++") || line.starts_with("---") {
-                    Style::default().fg(Color::Blue)
-                } else if line.starts_with("@@") {
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD)
-                } else if line.starts_with('+') {
-                    Style::default().fg(Color::Green)
-                } else if line.starts_with('-') {
-                    Style::default().fg(Color::Red)
-                } else {
-                    Style::default().fg(Color::Reset)
+                let style = match kind {
+                    PreviewKind::Diff => {
+                        if line.starts_with("Preview unavailable for ") {
+                            Style::default()
+                                .fg(Color::Yellow)
+                                .add_modifier(Modifier::BOLD)
+                        } else if line.starts_with("+++") || line.starts_with("---") {
+                            Style::default().fg(Color::Blue)
+                        } else if line.starts_with("@@") {
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD)
+                        } else if line.starts_with('+') {
+                            Style::default().fg(Color::Green)
+                        } else if line.starts_with('-') {
+                            Style::default().fg(Color::Red)
+                        } else {
+                            Style::default().fg(Color::Reset)
+                        }
+                    }
+                    PreviewKind::Markdown => {
+                        if line.starts_with('#') {
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD)
+                        } else if line.starts_with("- ") || line.starts_with("* ") {
+                            Style::default().fg(Color::Yellow)
+                        } else if line.starts_with('>') {
+                            Style::default().fg(Color::DarkGray)
+                        } else {
+                            Style::default().fg(Color::Reset)
+                        }
+                    }
+                    PreviewKind::Plain | PreviewKind::Hex | PreviewKind::Notice => {
+                        if line.starts_with("Preview unavailable for ") {
+                            Style::default()
+                                .fg(Color::Yellow)
+                                .add_modifier(Modifier::BOLD)
+                        } else {
+                            Style::default().fg(Color::Reset)
+                        }
+                    }
                 };
                 Line::from(Span::styled(line.to_string(), style))
             })
