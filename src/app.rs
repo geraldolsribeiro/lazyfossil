@@ -682,6 +682,7 @@ impl App {
                     if self.state.timeline_selected > 0 {
                         self.state.timeline_selected -= 1;
                     }
+                    self.sync_timeline_scroll();
                     self.refresh_timeline();
                     self.refresh_timeline_details();
                 }
@@ -689,6 +690,7 @@ impl App {
                     if self.state.history_selected > 0 {
                         self.state.history_selected -= 1;
                     }
+                    self.sync_history_scroll();
                     self.refresh_history();
                     self.refresh_history_details();
                 }
@@ -696,6 +698,7 @@ impl App {
                     if repo.selected_file > 0 {
                         repo.selected_file -= 1;
                     }
+                    self.sync_files_scroll();
                     self.refresh_views();
                 }
             }
@@ -716,6 +719,7 @@ impl App {
                     if self.state.timeline_selected + 1 < repo.timeline.len() {
                         self.state.timeline_selected += 1;
                     }
+                    self.sync_timeline_scroll();
                     self.refresh_timeline();
                     self.refresh_timeline_details();
                 }
@@ -723,6 +727,7 @@ impl App {
                     if self.state.history_selected + 1 < self.state.history.len() {
                         self.state.history_selected += 1;
                     }
+                    self.sync_history_scroll();
                     self.refresh_history();
                     self.refresh_history_details();
                 }
@@ -730,9 +735,26 @@ impl App {
                     if repo.selected_file + 1 < repo.files.len() {
                         repo.selected_file += 1;
                     }
+                    self.sync_files_scroll();
                     self.refresh_views();
                 }
             }
+        }
+    }
+
+    fn sync_files_scroll(&mut self) {
+        if let Some(repo) = &self.state.repo {
+            self.state.files_scroll = self.state.files_scroll.min(repo.files.len().saturating_sub(1));
+        }
+    }
+
+    fn sync_history_scroll(&mut self) {
+        self.state.history_scroll = self.state.history_scroll.min(self.state.history.len().saturating_sub(1));
+    }
+
+    fn sync_timeline_scroll(&mut self) {
+        if let Some(repo) = &self.state.repo {
+            self.state.timeline_scroll = self.state.timeline_scroll.min(repo.timeline.len().saturating_sub(1));
         }
     }
 
