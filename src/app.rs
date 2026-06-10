@@ -88,6 +88,9 @@ pub enum PreviewKind {
     Diff,
     Plain,
     Markdown,
+    Toml,
+    Json,
+    Source,
     Hex,
     Notice,
 }
@@ -251,11 +254,7 @@ impl App {
                     "extra" | "checked-out" => match fs::read(&path) {
                         Ok(bytes) => match String::from_utf8(bytes) {
                             Ok(content) => {
-                                self.state.preview_kind = if file.path.ends_with(".md") {
-                                    PreviewKind::Markdown
-                                } else {
-                                    PreviewKind::Plain
-                                };
+                                self.state.preview_kind = preview_kind_for_path(&file.path);
                                 if content.trim().is_empty() {
                                     format!("Empty file: {}", file.path)
                                 } else {
@@ -278,12 +277,7 @@ impl App {
                                 match fs::read(&path) {
                                     Ok(bytes) => match String::from_utf8(bytes) {
                                         Ok(content) => {
-                                            self.state.preview_kind = if file.path.ends_with(".md")
-                                            {
-                                                PreviewKind::Markdown
-                                            } else {
-                                                PreviewKind::Plain
-                                            };
+                                            self.state.preview_kind = preview_kind_for_path(&file.path);
                                             Self::expand_tabs(&content)
                                         }
                                         Err(_) => {
@@ -417,7 +411,6 @@ impl App {
         }
         out
     }
-
     fn current_file_path(&self) -> Option<String> {
         self.state
             .repo
@@ -887,6 +880,69 @@ fn is_binary_path(path: &str) -> bool {
         .any(|ext| lower.ends_with(ext))
 }
 
+fn preview_kind_for_path(path: &str) -> PreviewKind {
+    if path.ends_with(".md") {
+        PreviewKind::Markdown
+    } else if path.ends_with(".toml") {
+        PreviewKind::Toml
+    } else if path.ends_with(".json") || path.ends_with(".json5") {
+        PreviewKind::Json
+    } else if is_source_path(path) {
+        PreviewKind::Source
+    } else {
+        PreviewKind::Plain
+    }
+}
+
+fn is_source_path(path: &str) -> bool {
+    path == "Makefile"
+        || path == "makefile"
+        || path == "GNUmakefile"
+        || path == "Dockerfile"
+        || path.ends_with(".mk")
+        || path.ends_with(".make")
+        || path.ends_with(".cmake")
+        || path.ends_with(".gradle")
+        || path.ends_with(".gradle.kts")
+        || path.ends_with(".nix")
+        || path.ends_with(".tf")
+        || path.ends_with(".tfvars")
+        || path.ends_with(".yaml")
+        || path.ends_with(".yml")
+        || path.ends_with(".rs")
+        || path.ends_with(".c")
+        || path.ends_with(".cc")
+        || path.ends_with(".cpp")
+        || path.ends_with(".cxx")
+        || path.ends_with(".h")
+        || path.ends_with(".hpp")
+        || path.ends_with(".hh")
+        || path.ends_with(".m")
+        || path.ends_with(".mm")
+        || path.ends_with(".s")
+        || path.ends_with(".S")
+        || path.ends_with(".asm")
+        || path.ends_with(".java")
+        || path.ends_with(".js")
+        || path.ends_with(".jsx")
+        || path.ends_with(".ts")
+        || path.ends_with(".tsx")
+        || path.ends_with(".go")
+        || path.ends_with(".py")
+        || path.ends_with(".rb")
+        || path.ends_with(".pl")
+        || path.ends_with(".pm")
+        || path.ends_with(".php")
+        || path.ends_with(".swift")
+        || path.ends_with(".scala")
+        || path.ends_with(".kt")
+        || path.ends_with(".kts")
+        || path.ends_with(".lua")
+        || path.ends_with(".sh")
+        || path.ends_with(".bash")
+        || path.ends_with(".zsh")
+}
+
 fn open_command_for(path: &str, editor: Option<&str>) -> Option<String> {
     let ext = Path::new(path).extension()?.to_str()?.to_ascii_lowercase();
     let cmd = match ext.as_str() {
@@ -1012,5 +1068,16 @@ mod tests {
         assert!(app
             .conflict_message("conflict.txt")
             .contains("Resolve the conflict"));
+    }
+
+    #[test]
+    fn preview_kind_matches_file_type() {
+        assert!(matches!(preview_kind_for_path("README.md"), PreviewKind::Markdown));
+        assert!(matches!(preview_kind_for_path("Cargo.toml"), PreviewKind::Toml));
+        assert!(matches!(preview_kind_for_path("data.json"), PreviewKind::Json));
+        assert!(matches!(preview_kind_for_path("src/main.rs"), PreviewKind::Source));
+        assert!(matches!(preview_kind_for_path("Makefile"), PreviewKind::Source));
+        assert!(matches!(preview_kind_for_path("Dockerfile"), PreviewKind::Source));
+        assert!(matches!(preview_kind_for_path("notes.txt"), PreviewKind::Plain));
     }
 }

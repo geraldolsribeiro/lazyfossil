@@ -582,6 +582,9 @@ fn preview_title(kind: PreviewKind) -> &'static str {
         PreviewKind::Diff => "Diff",
         PreviewKind::Plain => "Plain preview",
         PreviewKind::Markdown => "Markdown preview",
+        PreviewKind::Toml => "TOML preview",
+        PreviewKind::Json => "JSON preview",
+        PreviewKind::Source => "Source preview",
         PreviewKind::Hex => "Hex preview",
         PreviewKind::Notice => "Preview",
     }
@@ -634,6 +637,38 @@ fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
                         }
                     }
                     PreviewKind::Plain | PreviewKind::Hex => Style::default().fg(Color::Reset),
+                    PreviewKind::Toml => {
+                        if line.starts_with('[') {
+                            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                        } else if line.contains('=') {
+                            Style::default().fg(Color::Yellow)
+                        } else {
+                            Style::default().fg(Color::Reset)
+                        }
+                    }
+                    PreviewKind::Json => {
+                        if line.trim_start().starts_with('"') && line.contains(':') {
+                            Style::default().fg(Color::Yellow)
+                        } else if line.contains('{') || line.contains('}') || line.contains('[') || line.contains(']') {
+                            Style::default().fg(Color::Cyan)
+                        } else {
+                            Style::default().fg(Color::Reset)
+                        }
+                    }
+                    PreviewKind::Source => {
+                        let trimmed = line.trim_start();
+                        if trimmed.starts_with("fn ")
+                            || trimmed.starts_with("pub ")
+                            || trimmed.starts_with("use ")
+                            || trimmed.starts_with("mod ")
+                        {
+                            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                        } else if trimmed.starts_with("//") {
+                            Style::default().fg(Color::DarkGray)
+                        } else {
+                            Style::default().fg(Color::Reset)
+                        }
+                    }
                     PreviewKind::Notice => {
                         if line.starts_with("Preview unavailable for ")
                             || line.starts_with("Missing file ")
@@ -758,6 +793,9 @@ mod tests {
         assert_eq!(preview_title(PreviewKind::Diff), "Diff");
         assert_eq!(preview_title(PreviewKind::Plain), "Plain preview");
         assert_eq!(preview_title(PreviewKind::Markdown), "Markdown preview");
+        assert_eq!(preview_title(PreviewKind::Toml), "TOML preview");
+        assert_eq!(preview_title(PreviewKind::Json), "JSON preview");
+        assert_eq!(preview_title(PreviewKind::Source), "Source preview");
         assert_eq!(preview_title(PreviewKind::Hex), "Hex preview");
         assert_eq!(preview_title(PreviewKind::Notice), "Preview");
     }
