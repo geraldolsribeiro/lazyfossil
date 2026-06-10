@@ -195,19 +195,6 @@ impl App {
                 self.state.diff_scroll = 0;
                 let path = self.display_path(&file.path);
                 self.state.diff = Some(match file.status.as_str() {
-                    "extra" | "checked-out" => match fs::read(&path) {
-                        Ok(bytes) => match String::from_utf8(bytes) {
-                            Ok(content) => {
-                                if content.trim().is_empty() {
-                                    format!("Empty file: {}", file.path)
-                                } else {
-                                    Self::expand_tabs(&content)
-                                }
-                            }
-                            Err(_) => Self::binary_preview_notice(&file.path),
-                        },
-                        Err(err) => format!("content error for {}: {}", file.path, err),
-                    },
                     "missing" => {
                         if let Some(renamed) = self.find_renamed_extra(&file.path) {
                             format!(
@@ -223,6 +210,19 @@ impl App {
                     }
                     _ if self.state.show_hex => match fs::read(&path) {
                         Ok(bytes) => Self::hexdump(&bytes),
+                        Err(err) => format!("content error for {}: {}", file.path, err),
+                    },
+                    "extra" | "checked-out" => match fs::read(&path) {
+                        Ok(bytes) => match String::from_utf8(bytes) {
+                            Ok(content) => {
+                                if content.trim().is_empty() {
+                                    format!("Empty file: {}", file.path)
+                                } else {
+                                    Self::expand_tabs(&content)
+                                }
+                            }
+                            Err(_) => Self::binary_preview_notice(&file.path),
+                        },
                         Err(err) => format!("content error for {}: {}", file.path, err),
                     },
                     _ => match self.client.diff_for(&file.path) {
