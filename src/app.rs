@@ -864,10 +864,10 @@ impl App {
                                     self.scroll_diff_down();
                                 }
                             }
-                            MouseEventKind::Down(_) => {
-                                if self.mouse_in_left_pane(mouse.column, terminal_width) {
-                                    self.click_file(mouse.column, mouse.row);
-                                }
+                            MouseEventKind::Down(_)
+                                if self.mouse_in_left_pane(mouse.column, terminal_width) =>
+                            {
+                                self.click_file(mouse.column, mouse.row);
                             }
                             _ => {}
                         }

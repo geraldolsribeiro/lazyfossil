@@ -103,10 +103,11 @@ impl FossilClient {
         &self,
         path: Option<&str>,
     ) -> std::result::Result<Vec<TimelineEntry>, FossilError> {
-        let mut args: Vec<String> = vec!["timeline", "-n", "50", "-t", "ci", "-F", "%h|%a|%d|%c|%t"]
-            .into_iter()
-            .map(|s| s.to_string())
-            .collect();
+        let mut args: Vec<String> =
+            vec!["timeline", "-n", "50", "-t", "ci", "-F", "%h|%a|%d|%c|%t"]
+                .into_iter()
+                .map(|s| s.to_string())
+                .collect();
         if let Some(path) = path {
             args.push("-p".to_string());
             args.push(path.to_string());
@@ -442,6 +443,13 @@ mod tests {
         let entries = parse_timeline("abc123|Alice|2026-06-04 10:00|Fix bug|\n");
         assert_eq!(entries.len(), 1);
         assert!(entries[0].tags.is_empty());
+    }
+
+    #[test]
+    fn parses_timeline_with_tags_at_end() {
+        let entries = parse_timeline("abc123|Alice|2026-06-04 10:00|Fix bug|sym-v0.7.3\n");
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].tags, "sym-v0.7.3");
     }
 
     #[test]
