@@ -456,6 +456,13 @@ mod tests {
     }
 
     #[test]
+    fn parses_conflict_status_entries() {
+        let status = parse_status("CONFLICT file.txt\nMERGE-CONFLICT other.txt\n");
+        assert_eq!(status.len(), 2);
+        assert!(status.iter().all(|f| f.status == "conflict"));
+    }
+
+    #[test]
     fn updates_ignore_file_contents() {
         let dir = std::env::temp_dir().join(format!("lazyfossil-test-{}", std::process::id()));
         let settings = dir.join(".fossil-settings");

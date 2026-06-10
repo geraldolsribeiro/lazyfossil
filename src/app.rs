@@ -229,24 +229,11 @@ impl App {
                 self.state.diff = Some(match file.status.as_str() {
                     "missing" => {
                         self.state.preview_kind = PreviewKind::Notice;
-                        if let Some(renamed) = self.find_renamed_extra(&file.path) {
-                            format!(
-                                "Missing file [[{}]]\nPossible rename detected: [[{}]]\nUse commit or discard actions from the working tree if needed.",
-                                file.path, renamed
-                            )
-                        } else {
-                            format!(
-                                "Missing file [[{}]]\nUse commit or discard actions from the working tree if needed.",
-                                file.path
-                            )
-                        }
+                        self.missing_file_message(&file.path)
                     }
                     "conflict" => {
                         self.state.preview_kind = PreviewKind::Notice;
-                        format!(
-                            "Conflict detected for [[{}]]\nResolve the conflict before committing.",
-                            file.path
-                        )
+                        self.conflict_message(&file.path)
                     }
                     _ if self.state.show_hex => {
                         self.state.preview_kind = PreviewKind::Hex;
@@ -362,6 +349,27 @@ impl App {
         } else {
             Path::new(path).to_path_buf()
         }
+    }
+
+    fn missing_file_message(&self, path: &str) -> String {
+        if let Some(renamed) = self.find_renamed_extra(path) {
+            format!(
+                "Missing file [[{}]]\nPossible rename detected: [[{}]]\nUse commit or discard actions from the working tree if needed.",
+                path, renamed
+            )
+        } else {
+            format!(
+                "Missing file [[{}]]\nUse commit or discard actions from the working tree if needed.",
+                path
+            )
+        }
+    }
+
+    fn conflict_message(&self, path: &str) -> String {
+        format!(
+            "Conflict detected for [[{}]]\nResolve the conflict before committing.",
+            path
+        )
     }
 
     fn find_renamed_extra(&self, missing_path: &str) -> Option<String> {
@@ -850,7 +858,7 @@ impl App {
                             MouseEventKind::Down(_) => self.click_file(mouse.column, mouse.row),
                             _ => {}
                         }
-                    },
+                    }
                     _ => {}
                 }
             }
@@ -965,5 +973,16 @@ mod tests {
         let app = App::new(false);
         assert!(app.mouse_in_left_pane(20, 100));
         assert!(!app.mouse_in_left_pane(40, 100));
+    }
+
+    #[test]
+    fn missing_and_conflict_messages_are_clear() {
+        let app = App::new(false);
+        assert!(app
+            .missing_file_message("gone.txt")
+            .contains("Missing file [[gone.txt]]"));
+        assert!(app
+            .conflict_message("conflict.txt")
+            .contains("Resolve the conflict"));
     }
 }
