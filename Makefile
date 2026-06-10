@@ -2,13 +2,6 @@
 all:
 	cargo run --release -- --debug
 
-.PHONY: check
-check:
-	/home/geraldo/git/geraldolsribeiro/cargo/target/release/cargo \
-		clippy --fix --allow-dirty --allow-staged
-	cargo fmt --all
-	cargo fmt --all -- --check
-
 .PHONY: doc
 doc:
 	$(MAKE) -C book/
@@ -25,6 +18,10 @@ fix:
 
 .PHONY: test
 test:
+	/home/geraldo/git/geraldolsribeiro/cargo/target/release/cargo \
+		clippy --fix --allow-dirty --allow-staged
+	cargo fmt --all
+	cargo fmt --all -- --check
 	cargo test
 
 .PHONY: vhs
