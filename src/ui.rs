@@ -132,6 +132,19 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             }
             Tab::FileHistory => {
                 let mut lines = Vec::new();
+                if let Some(repo) = &state.repo {
+                    if let Some(file) = repo.files.get(repo.selected_file) {
+                        lines.push(Line::from(vec![
+                            Span::styled("file ", Style::default().fg(Color::DarkGray)),
+                            Span::styled(file.path.clone(), Style::default().fg(Color::Yellow)),
+                        ]));
+                        lines.push(Line::from(vec![
+                            Span::styled("entries ", Style::default().fg(Color::DarkGray)),
+                            Span::styled(state.history.len().to_string(), Style::default().fg(Color::White)),
+                        ]));
+                        lines.push(Line::from(""));
+                    }
+                }
                 if let Some(entry) = state.history.get(state.history_selected) {
                     lines.push(Line::from(vec![
                         Span::styled("commit ", Style::default().fg(Color::DarkGray)),
@@ -156,12 +169,17 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 lines.extend(color_preview(diff, PreviewKind::Diff).lines);
                 Paragraph::new(Text::from(lines))
                     .scroll((state.diff_scroll, 0))
-                    .block(Block::default().borders(Borders::ALL).title("Diff"))
+                    .block(Block::default().borders(Borders::ALL).title("File history details"))
                     .wrap(Wrap { trim: false })
             }
             Tab::Timeline => {
                 let mut lines = Vec::new();
                 if let Some(repo) = &state.repo {
+                    lines.push(Line::from(vec![
+                        Span::styled("entries ", Style::default().fg(Color::DarkGray)),
+                        Span::styled(repo.timeline.len().to_string(), Style::default().fg(Color::White)),
+                    ]));
+                    lines.push(Line::from(""));
                     if let Some(entry) = repo.timeline.get(state.timeline_selected) {
                         lines.push(Line::from(vec![
                             Span::styled("commit ", Style::default().fg(Color::DarkGray)),
@@ -187,7 +205,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 lines.extend(color_preview(diff, PreviewKind::Diff).lines);
                 Paragraph::new(Text::from(lines))
                     .scroll((state.diff_scroll, 0))
-                    .block(Block::default().borders(Borders::ALL).title("Diff"))
+                    .block(Block::default().borders(Borders::ALL).title("Timeline details"))
                     .wrap(Wrap { trim: false })
             }
         }
@@ -609,5 +627,20 @@ mod tests {
             Text::from(vec![Line::from(vec![Span::raw("q")])])
         };
         assert!(!footer.to_string().contains("selected files"));
+    }
+
+    #[test]
+    fn preview_titles_match_context() {
+        assert_eq!(preview_title(PreviewKind::Diff), "Diff");
+        assert_eq!(preview_title(PreviewKind::Plain), "Plain preview");
+        assert_eq!(preview_title(PreviewKind::Markdown), "Markdown preview");
+        assert_eq!(preview_title(PreviewKind::Hex), "Hex preview");
+        assert_eq!(preview_title(PreviewKind::Notice), "Preview");
+    }
+
+    #[test]
+    fn commit_prompt_helper_formats_message() {
+        let text = commit_prompt_text("selected", "Ship it");
+        assert!(text.to_string().contains("commit selected: Ship it"));
     }
 }

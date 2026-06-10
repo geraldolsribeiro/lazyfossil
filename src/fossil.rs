@@ -86,6 +86,14 @@ impl FossilClient {
         self.run(&["diff", "--checkin", rid])
     }
 
+    pub fn checkin_file_diff(
+        &self,
+        rid: &str,
+        path: &str,
+    ) -> std::result::Result<String, FossilError> {
+        self.run(&["diff", "--checkin", rid, "--", path])
+    }
+
     pub fn sync(&self) -> std::result::Result<String, FossilError> {
         self.run(&["sync"])
     }

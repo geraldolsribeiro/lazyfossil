@@ -163,9 +163,21 @@ impl App {
     }
 
     fn refresh_history_details(&mut self) {
-        if let Some(entry) = self.state.history.get(self.state.history_selected) {
+        let Some(entry) = self.state.history.get(self.state.history_selected) else {
+            self.state.history_diff = None;
+            return;
+        };
+        let Some(path) = self.current_file_path() else {
             self.state.history_diff = self.client.checkin_diff(&entry.rid).ok();
-        }
+            return;
+        };
+        self.state.history_diff = self
+            .client
+            .checkin_file_diff(&entry.rid, &path)
+            .ok()
+            .filter(|diff| !diff.trim().is_empty())
+            .or_else(|| self.client.checkin_diff(&entry.rid).ok())
+            .filter(|diff| !diff.trim().is_empty());
     }
 
     fn refresh_timeline(&mut self) {
