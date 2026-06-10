@@ -91,6 +91,7 @@ lazyfossil’s main screen is built around three views (Working tree, File histo
 - Quick commit and sync actions with confirmation prompts
 - Toggle all/none selection with `a`
 - Better handling for common Fossil workflows
+- Clearer mouse and keyboard hints in the footer
 
 ## Roadmap
 

@@ -12,7 +12,6 @@
 - `Space`: toggle the selected file for commit
 - `c`: commit selected files
 - `f`: commit the current file
-- `Space`: mark/unmark files for commit
 - `a`: select all / select none
 - `i`: add the current file to `.fossil-settings/ignore-glob`
 - `e`: open the current file in `$EDITOR`
