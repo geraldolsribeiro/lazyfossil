@@ -5,13 +5,14 @@
 - `Up` / `Down`: move through the active list
 - `Tab`: switch between **Working tree**, **File history**, and **Timeline**
 - Mouse click: select an item
-- Mouse wheel / `PageUp` / `PageDown`: scroll the details pane
+- Mouse wheel / `PageUp` / `PageDown`: scroll the details pane; over the left list it moves the selection instead
 
 ## Working tree actions
 
 - `Space`: toggle the selected file for commit
 - `c`: commit selected files
 - `f`: commit the current file
+- `Space`: mark/unmark files for commit
 - `a`: select all / select none
 - `i`: add the current file to `.fossil-settings/ignore-glob`
 - `e`: open the current file in `$EDITOR`

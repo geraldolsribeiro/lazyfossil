@@ -31,7 +31,7 @@ browse files, see history, preview changes, and commit or sync without extra fri
 2. Go to your project checkout
 3. Type `lazyfossil`
 4. Browse changes and history
-4. Press `q` to quit
+5. Press `q` to quit
 
 ## Installation
 
@@ -51,7 +51,7 @@ Follow instructions in <https://rust-lang.org/tools/install/> to install
 Download pre-built binaries from the latest [GitHub releases](https://github.com/geraldolsribeiro/lazyfossil/releases/):
 
 - [Linux](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-linux>)
-- [MacOS](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>)
+- [macOS](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>)
 - [Windows](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-windows.exe>)
 
 ## Source code
@@ -104,11 +104,20 @@ lazyfossil’s main screen is built around three views:
 - Book documentation for the main views and config
 - VHS demo tapes for the main flows
 
-### Next
+### Now
 - UI polish and layout tweaks
-- Better mouse interactions and scrolling
-- More tests for parsing and rendering
-- Optional follow-up refinements
+- Better file history and timeline details
+- Status and recovery UX
+
+### Next
+- Navigation and mouse
+- Quality and tests
+
+### Later
+- Follow-up refinements
+  - workflow tweaks discovered during use
+  - small command/help improvements
+  - docs updates as features change
 
 ## Versioning
 

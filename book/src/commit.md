@@ -22,12 +22,14 @@ In the **Working tree** view:
 - use `c` to start a commit for the marked files
 - use `f` to commit only the current file
 
-The selected files are shown in the footer so you can check what will be included.
+The selected files are shown in the footer while you are in **Working tree**, so you can check what will be included.
 
 ## Start the commit
 
 Press `c` to open the commit prompt for the files you marked.
 If nothing is marked, lazyfossil uses the currently selected file.
+
+The details pane title changes with the active preview, so it is easier to tell whether you are looking at a diff, plain preview, or Markdown preview.
 
 ## Write the commit message
 

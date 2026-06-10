@@ -18,7 +18,7 @@ Follow instructions in <https://rust-lang.org/tools/install/> to install
 Download pre-built binaries from the latest [GitHub releases](https://github.com/geraldolsribeiro/lazyfossil/releases/):
 
 - [Linux](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-linux>)
-- [MacOS](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>)
+- [macOS](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-macos>)
 - [Windows](<https://github.com/geraldolsribeiro/lazyfossil/releases/latest/download/lazyfossil-windows.exe>)
 
 ## Source code

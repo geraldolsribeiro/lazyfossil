@@ -15,14 +15,14 @@ Use it to:
 
 ![working tree demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/working_tree.gif)
 
-## File History
+## File history
 
 This view shows the history of the currently selected file.
 
 Use it to:
 
 - browse commits that touched the selected path
-- inspect commit metadata and full diffs
+- inspect commit metadata and file-specific diffs
 - follow the evolution of one file over time
 
 ![File history demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/file_history.gif)
@@ -34,10 +34,10 @@ This view shows repository-wide history.
 Use it to:
 
 - browse recent commits in the checkout
-- inspect commit metadata and full diffs
+- inspect commit metadata and repository-wide diffs
 - review project changes without filtering by filename
 
-![File history demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/timeline.gif)
+![Timeline demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/timeline.gif)
 
 ## Navigation
 
