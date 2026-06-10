@@ -288,6 +288,13 @@ fn merge_files(mut tracked: Vec<FileStatus>, status: Vec<FileStatus>, extras: Ve
             tracked.push(file);
         }
     }
+    tracked.sort_by(|a, b| {
+        match (a.path.starts_with('.'), b.path.starts_with('.')) {
+            (false, true) => std::cmp::Ordering::Less,
+            (true, false) => std::cmp::Ordering::Greater,
+            _ => a.path.cmp(&b.path),
+        }
+    });
     tracked
 }
 
@@ -321,10 +328,12 @@ mod tests {
     fn parses_status_and_extras_and_merges() {
         let tracked = parse_tracked("src/lib.rs\nREADME.md\nold.txt\ntracked.txt\n");
         let status = parse_status("EDITED src/lib.rs\nADDED   README.md\nDELETED old.txt\nMISSING gone.txt\nCHECKED-OUT tracked.txt\nIGNORED nope\n");
-        let extras = parse_extra("tmp.log\n  \nnotes.txt\n");
+        let extras = parse_extra("tmp.log\n  \nnotes.txt\n.hidden\n");
         let merged = merge_files(tracked, status, extras);
 
         assert_eq!(merged.len(), 7);
+        assert_eq!(merged.first().map(|f| f.path.as_str()), Some("README.md"));
+        assert_eq!(merged.last().map(|f| f.path.as_str()), Some(".hidden"));
         assert!(merged.iter().any(|f| f.path == "src/lib.rs" && f.status == "edited"));
         assert!(merged.iter().any(|f| f.path == "README.md" && f.status == "added"));
         assert!(merged.iter().any(|f| f.path == "old.txt" && f.status == "deleted"));
