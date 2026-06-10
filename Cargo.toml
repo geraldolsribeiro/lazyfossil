@@ -25,3 +25,5 @@ include = [
 anyhow = "1"
 crossterm = "0.29"
 ratatui = "0.30"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"

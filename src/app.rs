@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::fossil::{FossilClient, FossilError, RepoState};
 use crate::ui;
 use anyhow::Result;
@@ -44,6 +45,7 @@ pub fn run(debug_enabled: bool) -> Result<()> {
 
 struct App {
     client: FossilClient,
+    config: Config,
     state: AppState,
 }
 
@@ -85,6 +87,7 @@ impl App {
     fn new(debug_enabled: bool) -> Self {
         Self {
             client: FossilClient::new(debug_enabled),
+            config: Config::load(),
             state: AppState {
                 tab: Tab::WorkingTree,
                 repo: None,
@@ -344,10 +347,10 @@ impl App {
         let Some(path) = self.current_file_path() else {
             return;
         };
-        let Some(editor) = env::var("EDITOR").ok() else {
-            self.state.error = Some("EDITOR environment variable is not set. Set it before editing, for example: export EDITOR=nvim".to_string());
-            return;
-        };
+        let editor = env::var("EDITOR")
+            .ok()
+            .or_else(|| self.config.editor.clone())
+            .unwrap_or_else(|| "vi".to_string());
         let full_path = self.display_path(&path);
         let path_arg = full_path.to_string_lossy().to_string();
         match self.spawn_external(&editor, &[path_arg.as_str()]) {
@@ -398,7 +401,7 @@ impl App {
         let Some(path) = self.current_file_path() else {
             return;
         };
-        let Some(cmd) = open_command_for(&path) else {
+        let Some(cmd) = open_command_for(&path, self.config.editor.as_deref()) else {
             self.state.error = Some("No app configured for this file type".to_string());
             return;
         };
@@ -528,8 +531,12 @@ impl App {
 
         let result = (|| {
             if !binary_files.is_empty() {
-                self.client
-                    .set_binary_glob("*.png,*.jpg,*.jpeg,*.gif,*.ico")?;
+                let binary_glob = self
+                    .config
+                    .binary_glob
+                    .as_deref()
+                    .unwrap_or("*.png,*.jpg,*.jpeg,*.gif,*.ico");
+                self.client.set_binary_glob(binary_glob)?;
             }
             if !extras.is_empty() {
                 self.client.add_files(&extras)?;
@@ -765,12 +772,10 @@ fn is_binary_path(path: &str) -> bool {
         .any(|ext| lower.ends_with(ext))
 }
 
-fn open_command_for(path: &str) -> Option<String> {
+fn open_command_for(path: &str, editor: Option<&str>) -> Option<String> {
     let ext = Path::new(path).extension()?.to_str()?.to_ascii_lowercase();
     let cmd = match ext.as_str() {
-        "txt" | "md" | "rs" | "toml" | "log" => {
-            env::var("EDITOR").unwrap_or_else(|_| "vi".to_string())
-        }
+        "txt" | "md" | "rs" | "toml" | "log" => editor.unwrap_or("vi").to_string(),
         "png" | "jpg" | "jpeg" | "gif" | "ico" => "xdg-open".to_string(),
         "pdf" => "xdg-open".to_string(),
         _ => "xdg-open".to_string(),
