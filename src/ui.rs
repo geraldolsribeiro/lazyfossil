@@ -169,7 +169,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .block(
                         Block::default()
                             .borders(Borders::ALL)
-                            .title(preview_title(state.preview_kind)),
+                            .title(right_pane_title(state, "Diff")),
                     )
                     .wrap(Wrap { trim: false })
             }
@@ -224,7 +224,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .block(
                         Block::default()
                             .borders(Borders::ALL)
-                            .title("File history details"),
+                            .title(right_pane_title(state, "File history details")),
                     )
                     .wrap(Wrap { trim: false })
             }
@@ -273,7 +273,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .block(
                         Block::default()
                             .borders(Borders::ALL)
-                            .title("Timeline details"),
+                            .title(right_pane_title(state, "Timeline details")),
                     )
                     .wrap(Wrap { trim: false })
             }
@@ -543,6 +543,40 @@ fn info_box_lines() -> Vec<Line<'static>> {
     ]
 }
 
+fn right_pane_title(state: &AppState, fallback: &str) -> String {
+    match state.tab {
+        Tab::WorkingTree => state
+            .repo
+            .as_ref()
+            .and_then(|repo| repo.files.get(repo.selected_file))
+            .map(|file| {
+                let title = match file.status.as_str() {
+                    "edited" => "Diff",
+                    "extra" => "Extra",
+                    "added" => "Added",
+                    "deleted" => "Deleted",
+                    "missing" => "Missing",
+                    "conflict" => "Conflict",
+                    _ => "Preview",
+                };
+                format!("{}: {}", title, file.path)
+            })
+            .unwrap_or_else(|| fallback.to_string()),
+        Tab::FileHistory => state
+            .repo
+            .as_ref()
+            .and_then(|repo| repo.files.get(repo.selected_file))
+            .map(|file| format!("{}: {}", fallback, file.path))
+            .unwrap_or_else(|| fallback.to_string()),
+        Tab::Timeline => state
+            .repo
+            .as_ref()
+            .and_then(|repo| repo.timeline.get(state.timeline_selected))
+            .map(|entry| format!("{}: {}", fallback, entry.rid))
+            .unwrap_or_else(|| fallback.to_string()),
+    }
+}
+
 fn preview_title(kind: PreviewKind) -> &'static str {
     match kind {
         PreviewKind::Diff => "Diff",
@@ -726,6 +760,63 @@ mod tests {
         assert_eq!(preview_title(PreviewKind::Markdown), "Markdown preview");
         assert_eq!(preview_title(PreviewKind::Hex), "Hex preview");
         assert_eq!(preview_title(PreviewKind::Notice), "Preview");
+    }
+
+    #[test]
+    fn right_pane_title_includes_selected_context() {
+        let mut state = AppState {
+            tab: Tab::WorkingTree,
+            repo: Some(crate::fossil::RepoState {
+                files: vec![
+                    crate::fossil::FileStatus {
+                        path: "src/lib.rs".to_string(),
+                        status: "edited".to_string(),
+                    },
+                    crate::fossil::FileStatus {
+                        path: "notes.txt".to_string(),
+                        status: "checked-out".to_string(),
+                    },
+                    crate::fossil::FileStatus {
+                        path: "tmp.log".to_string(),
+                        status: "extra".to_string(),
+                    },
+                ],
+                timeline: vec![crate::fossil::TimelineEntry {
+                    rid: "abc123".to_string(),
+                    user: "Alice".to_string(),
+                    date: "2026-06-04 10:00".to_string(),
+                    message: "Fix bug".to_string(),
+                    tags: "sym-v0.7.3".to_string(),
+                }],
+                selected_file: 0,
+            }),
+            error: None,
+            diff: None,
+            diff_scroll: 0,
+            selected_files: vec![],
+            commit_prompt: None,
+            commit_target: CommitTarget::Selected,
+            ignore_prompt: None,
+            discard_prompt: None,
+            history: vec![],
+            history_diff: None,
+            timeline_diff: None,
+            redraw: false,
+            show_hex: false,
+            history_selected: 0,
+            timeline_selected: 0,
+            files_scroll: 0,
+            history_scroll: 0,
+            timeline_scroll: 0,
+            preview_kind: PreviewKind::Diff,
+        };
+        assert_eq!(right_pane_title(&state, "Diff"), "Diff: src/lib.rs");
+        state.repo.as_mut().unwrap().selected_file = 1;
+        assert_eq!(right_pane_title(&state, "Diff"), "Preview: notes.txt");
+        state.repo.as_mut().unwrap().selected_file = 2;
+        assert_eq!(right_pane_title(&state, "Diff"), "Extra: tmp.log");
+        state.tab = Tab::Timeline;
+        assert_eq!(right_pane_title(&state, "Timeline details"), "Timeline details: abc123");
     }
 
     #[test]
