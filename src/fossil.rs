@@ -438,6 +438,20 @@ mod tests {
     }
 
     #[test]
+    fn parses_timeline_without_tags_as_empty() {
+        let entries = parse_timeline("abc123|Alice|2026-06-04 10:00|Fix bug|\n");
+        assert_eq!(entries.len(), 1);
+        assert!(entries[0].tags.is_empty());
+    }
+
+    #[test]
+    fn ignores_malformed_timeline_rows() {
+        let entries = parse_timeline("bad row\nabc123|Alice|2026-06-04 10:00|Fix bug|tag\n");
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].rid, "abc123");
+    }
+
+    #[test]
     fn builds_commit_arguments_for_selected_paths() {
         let paths = vec!["a.txt".to_string(), "b.txt".to_string()];
         let args = build_commit_args(&paths, "hello");

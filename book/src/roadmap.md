@@ -20,16 +20,16 @@
   - clearer warnings and errors
 
 ### Next
-- Navigation and mouse
-  - smoother scrolling
-  - better mouse selection
-  - improved pane focus behavior
-  - edge-case fixes in selection
 - Quality and tests
   - status parsing tests
   - preview rendering tests
   - regression tests for styling
   - coverage for missing, rename, and conflict cases
+- Navigation and mouse
+  - smoother scrolling
+  - better mouse selection
+  - improved pane focus behavior
+  - edge-case fixes in selection
 
 ### Done
 - Working tree, file history, and timeline views
@@ -45,17 +45,6 @@
   - workflow tweaks discovered during use
   - small command/help improvements
   - docs updates as features change
-
-### Done
-- Working tree, file history, and timeline views
-- Temporary selection-based commit flow
-- Inline commit message prompt
-- Ignore-file support
-- Sync support
-- Binary preview fallback
-- XDG config file support
-- Book documentation for the main views and config
-- VHS demo tapes for the main flows
 
 ## Versioning
 

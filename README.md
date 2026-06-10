@@ -112,8 +112,8 @@ lazyfossil’s main screen is built around three views (Working tree, File histo
 - Status and recovery UX
 
 ### Next
-- Navigation and mouse
 - Quality and tests
+- Navigation and mouse
 
 ### Done
 - Working tree, file history, and timeline views
