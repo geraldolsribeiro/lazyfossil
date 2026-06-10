@@ -35,7 +35,7 @@ This view shows repository-wide history.
 Use it to:
 
 - browse recent commits in the checkout
-- inspect commit metadata and repository-wide diffs
+- inspect commit metadata, tags, and repository-wide diffs
 - review project changes without filtering by filename
 
 ![Timeline demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/timeline.gif)

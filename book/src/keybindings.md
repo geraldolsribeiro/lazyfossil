@@ -6,6 +6,7 @@
 - `Tab`: switch between **Working tree**, **File history**, and **Timeline**
 - Mouse click: select an item in the left pane
 - Mouse wheel / `PageUp` / `PageDown`: scroll the details pane; over the left pane it moves the selection instead
+- Timeline rows can show commit tags next to the hash
 
 ## Working tree actions
 

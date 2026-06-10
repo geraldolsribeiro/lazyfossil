@@ -7,7 +7,7 @@ The **File history** tab shows the commit history for the file currently selecte
 ## What it shows
 
 - the selected file’s timeline entries from Fossil
-- commit id, author, date, and message for each entry
+- commit id, author, date, message, and tags for each entry
 - the full diff for the highlighted commit in the details pane
 
 ## How to use it
