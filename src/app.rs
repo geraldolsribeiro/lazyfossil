@@ -855,7 +855,11 @@ impl App {
                                     self.scroll_diff_down();
                                 }
                             }
-                            MouseEventKind::Down(_) => self.click_file(mouse.column, mouse.row),
+                            MouseEventKind::Down(_) => {
+                                if self.mouse_in_left_pane(mouse.column, terminal_width) {
+                                    self.click_file(mouse.column, mouse.row);
+                                }
+                            }
                             _ => {}
                         }
                     }
@@ -973,6 +977,12 @@ mod tests {
         let app = App::new(false);
         assert!(app.mouse_in_left_pane(20, 100));
         assert!(!app.mouse_in_left_pane(40, 100));
+    }
+
+    #[test]
+    fn mouse_right_pane_is_not_treated_as_list_click_area() {
+        let app = App::new(false);
+        assert!(!app.mouse_in_left_pane(80, 100));
     }
 
     #[test]
