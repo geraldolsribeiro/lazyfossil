@@ -192,10 +192,15 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     }
                 }
                 if let Some(entry) = state.history.get(state.history_selected) {
-                    lines.push(Line::from(vec![
+                    let mut commit_line = vec![
                         Span::styled("commit ", Style::default().fg(Color::DarkGray)),
                         Span::styled(entry.rid.clone(), Style::default().fg(Color::Yellow)),
-                    ]));
+                    ];
+                    if !entry.tags.is_empty() {
+                        commit_line.push(Span::raw(" "));
+                        commit_line.push(Span::styled(entry.tags.clone(), Style::default().fg(Color::Cyan)));
+                    }
+                    lines.push(Line::from(commit_line));
                     lines.push(Line::from(vec![
                         Span::styled("author ", Style::default().fg(Color::DarkGray)),
                         Span::raw(entry.user.clone()),
@@ -206,12 +211,6 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         Span::styled("message ", Style::default().fg(Color::DarkGray)),
                         Span::raw(entry.message.clone()),
                     ]));
-                    if !entry.tags.is_empty() {
-                        lines.push(Line::from(vec![
-                            Span::styled("tags ", Style::default().fg(Color::DarkGray)),
-                            Span::styled(entry.tags.clone(), Style::default().fg(Color::Cyan)),
-                        ]));
-                    }
                     lines.push(Line::from(""));
                 }
                 let diff = state
