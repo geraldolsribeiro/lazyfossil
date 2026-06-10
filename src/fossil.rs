@@ -50,7 +50,10 @@ pub struct FossilClient {
 
 impl FossilClient {
     pub fn new(debug_enabled: bool) -> Self {
-        Self { checkout_root: None, debug_enabled }
+        Self {
+            checkout_root: None,
+            debug_enabled,
+        }
     }
 
     pub fn checkout_root_path(&self) -> Option<&Path> {
@@ -65,7 +68,11 @@ impl FossilClient {
         let extras = self.run(&["extras", "--dotfiles"]).unwrap_or_default();
         let timeline = self.history_timeline(None).unwrap_or_default();
         Ok(RepoState {
-            files: merge_files(parse_tracked(&tracked), parse_status(&status), parse_extra(&extras)),
+            files: merge_files(
+                parse_tracked(&tracked),
+                parse_status(&status),
+                parse_extra(&extras),
+            ),
             timeline,
             selected_file: 0,
         })
@@ -117,7 +124,10 @@ impl FossilClient {
     }
 
     pub fn ignore_glob(&self, pattern: &str) -> std::result::Result<String, FossilError> {
-        let root = self.checkout_root.as_deref().ok_or(FossilError::NotRepository)?;
+        let root = self
+            .checkout_root
+            .as_deref()
+            .ok_or(FossilError::NotRepository)?;
         update_ignore_file(root, pattern).map_err(|e| FossilError::CommandFailed(e.to_string()))?;
         Ok(format!("ignored {}", pattern))
     }
@@ -145,14 +155,18 @@ impl FossilClient {
     fn checkout_root(&self) -> std::result::Result<PathBuf, FossilError> {
         let mut command = Command::new("fossil");
         command.arg("info");
-        let output = command.output().map_err(|e| FossilError::CommandFailed(e.to_string()))?;
+        let output = command
+            .output()
+            .map_err(|e| FossilError::CommandFailed(e.to_string()))?;
         let info = String::from_utf8_lossy(&output.stdout);
         for line in info.lines() {
             if let Some(root) = line.strip_prefix("local-root:") {
                 return Ok(Path::new(root.trim()).to_path_buf());
             }
         }
-        Err(FossilError::CommandFailed("unable to determine checkout root".to_string()))
+        Err(FossilError::CommandFailed(
+            "unable to determine checkout root".to_string(),
+        ))
     }
 
     fn run(&self, args: &[&str]) -> std::result::Result<String, FossilError> {
@@ -162,7 +176,8 @@ impl FossilClient {
         if let Some(root) = self.checkout_root.as_deref() {
             command.current_dir(root);
         }
-        let output = command.output()
+        let output = command
+            .output()
             .map_err(|e| FossilError::CommandFailed(e.to_string()))?;
 
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
@@ -234,7 +249,10 @@ fn update_ignore_file(root: &Path, pattern: &str) -> std::io::Result<()> {
 }
 
 fn log_command(cmd: &str, success: bool, stdout: &str, stderr: &str) -> std::io::Result<()> {
-    let mut file = OpenOptions::new().create(true).append(true).open("fossil-debug.log")?;
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("fossil-debug.log")?;
     writeln!(file, "=== {} ===", cmd)?;
     writeln!(file, "status: {}", if success { "ok" } else { "err" })?;
     if !stdout.trim().is_empty() {
@@ -251,13 +269,46 @@ fn parse_status(out: &str) -> Vec<FileStatus> {
     out.lines()
         .filter_map(|line| {
             line.strip_prefix("EDITED ")
-                .map(|path| FileStatus { path: path.trim().to_string(), status: "edited".to_string() })
-                .or_else(|| line.strip_prefix("ADDED   ").map(|path| FileStatus { path: path.trim().to_string(), status: "added".to_string() }))
-                .or_else(|| line.strip_prefix("DELETED ").map(|path| FileStatus { path: path.trim().to_string(), status: "deleted".to_string() }))
-                .or_else(|| line.strip_prefix("MISSING ").map(|path| FileStatus { path: path.trim().to_string(), status: "missing".to_string() }))
-                .or_else(|| line.strip_prefix("CHECKED-OUT ").map(|path| FileStatus { path: path.trim().to_string(), status: "checked-out".to_string() }))
-                .or_else(|| line.strip_prefix("CONFLICT ").map(|path| FileStatus { path: path.trim().to_string(), status: "conflict".to_string() }))
-                .or_else(|| line.strip_prefix("MERGE-CONFLICT ").map(|path| FileStatus { path: path.trim().to_string(), status: "conflict".to_string() }))
+                .map(|path| FileStatus {
+                    path: path.trim().to_string(),
+                    status: "edited".to_string(),
+                })
+                .or_else(|| {
+                    line.strip_prefix("ADDED   ").map(|path| FileStatus {
+                        path: path.trim().to_string(),
+                        status: "added".to_string(),
+                    })
+                })
+                .or_else(|| {
+                    line.strip_prefix("DELETED ").map(|path| FileStatus {
+                        path: path.trim().to_string(),
+                        status: "deleted".to_string(),
+                    })
+                })
+                .or_else(|| {
+                    line.strip_prefix("MISSING ").map(|path| FileStatus {
+                        path: path.trim().to_string(),
+                        status: "missing".to_string(),
+                    })
+                })
+                .or_else(|| {
+                    line.strip_prefix("CHECKED-OUT ").map(|path| FileStatus {
+                        path: path.trim().to_string(),
+                        status: "checked-out".to_string(),
+                    })
+                })
+                .or_else(|| {
+                    line.strip_prefix("CONFLICT ").map(|path| FileStatus {
+                        path: path.trim().to_string(),
+                        status: "conflict".to_string(),
+                    })
+                })
+                .or_else(|| {
+                    line.strip_prefix("MERGE-CONFLICT ").map(|path| FileStatus {
+                        path: path.trim().to_string(),
+                        status: "conflict".to_string(),
+                    })
+                })
         })
         .collect()
 }
@@ -266,7 +317,10 @@ fn parse_extra(out: &str) -> Vec<FileStatus> {
     out.lines()
         .filter_map(|line| {
             let path = line.trim();
-            (!path.is_empty()).then(|| FileStatus { path: path.to_string(), status: "extra".to_string() })
+            (!path.is_empty()).then(|| FileStatus {
+                path: path.to_string(),
+                status: "extra".to_string(),
+            })
         })
         .collect()
 }
@@ -275,12 +329,19 @@ fn parse_tracked(out: &str) -> Vec<FileStatus> {
     out.lines()
         .filter_map(|line| {
             let path = line.trim();
-            (!path.is_empty()).then(|| FileStatus { path: path.to_string(), status: "checked-out".to_string() })
+            (!path.is_empty()).then(|| FileStatus {
+                path: path.to_string(),
+                status: "checked-out".to_string(),
+            })
         })
         .collect()
 }
 
-fn merge_files(mut tracked: Vec<FileStatus>, status: Vec<FileStatus>, extras: Vec<FileStatus>) -> Vec<FileStatus> {
+fn merge_files(
+    mut tracked: Vec<FileStatus>,
+    status: Vec<FileStatus>,
+    extras: Vec<FileStatus>,
+) -> Vec<FileStatus> {
     for file in status.into_iter().chain(extras.into_iter()) {
         if let Some(existing) = tracked.iter_mut().find(|entry| entry.path == file.path) {
             existing.status = file.status;
@@ -288,13 +349,13 @@ fn merge_files(mut tracked: Vec<FileStatus>, status: Vec<FileStatus>, extras: Ve
             tracked.push(file);
         }
     }
-    tracked.sort_by(|a, b| {
-        match (a.path.starts_with('.'), b.path.starts_with('.')) {
+    tracked.sort_by(
+        |a, b| match (a.path.starts_with('.'), b.path.starts_with('.')) {
             (false, true) => std::cmp::Ordering::Less,
             (true, false) => std::cmp::Ordering::Greater,
             _ => a.path.cmp(&b.path),
-        }
-    });
+        },
+    );
     tracked
 }
 
@@ -334,18 +395,34 @@ mod tests {
         assert_eq!(merged.len(), 7);
         assert_eq!(merged.first().map(|f| f.path.as_str()), Some("README.md"));
         assert_eq!(merged.last().map(|f| f.path.as_str()), Some(".hidden"));
-        assert!(merged.iter().any(|f| f.path == "src/lib.rs" && f.status == "edited"));
-        assert!(merged.iter().any(|f| f.path == "README.md" && f.status == "added"));
-        assert!(merged.iter().any(|f| f.path == "old.txt" && f.status == "deleted"));
-        assert!(merged.iter().any(|f| f.path == "gone.txt" && f.status == "missing"));
-        assert!(merged.iter().any(|f| f.path == "tracked.txt" && f.status == "checked-out"));
-        assert!(merged.iter().any(|f| f.path == "tmp.log" && f.status == "extra"));
-        assert!(merged.iter().any(|f| f.path == "notes.txt" && f.status == "extra"));
+        assert!(merged
+            .iter()
+            .any(|f| f.path == "src/lib.rs" && f.status == "edited"));
+        assert!(merged
+            .iter()
+            .any(|f| f.path == "README.md" && f.status == "added"));
+        assert!(merged
+            .iter()
+            .any(|f| f.path == "old.txt" && f.status == "deleted"));
+        assert!(merged
+            .iter()
+            .any(|f| f.path == "gone.txt" && f.status == "missing"));
+        assert!(merged
+            .iter()
+            .any(|f| f.path == "tracked.txt" && f.status == "checked-out"));
+        assert!(merged
+            .iter()
+            .any(|f| f.path == "tmp.log" && f.status == "extra"));
+        assert!(merged
+            .iter()
+            .any(|f| f.path == "notes.txt" && f.status == "extra"));
     }
 
     #[test]
     fn parses_timeline_format() {
-        let entries = parse_timeline("abc123|Alice|2026-06-04 10:00|Fix bug\nzzz999|Bob|2026-06-04 11:00|Refactor\n");
+        let entries = parse_timeline(
+            "abc123|Alice|2026-06-04 10:00|Fix bug\nzzz999|Bob|2026-06-04 11:00|Refactor\n",
+        );
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[0].rid, "abc123");
         assert_eq!(entries[0].user, "Alice");

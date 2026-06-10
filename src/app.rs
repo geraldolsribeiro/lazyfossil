@@ -23,7 +23,10 @@ use std::time::Duration;
 
 pub fn run(debug_enabled: bool) -> Result<()> {
     if debug_enabled {
-        let _ = OpenOptions::new().create(true).append(true).open("fossil-debug.log");
+        let _ = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("fossil-debug.log");
     }
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -381,7 +384,10 @@ impl App {
             let full_path = self.display_path(&path);
             fs::remove_file(&full_path).map_err(|e| e.to_string())
         } else {
-            self.client.discard_file(&path).map(|_| ()).map_err(|e| e.to_string())
+            self.client
+                .discard_file(&path)
+                .map(|_| ())
+                .map_err(|e| e.to_string())
         };
 
         match result {
@@ -445,7 +451,10 @@ impl App {
             return;
         };
         let all_selected = !repo.files.is_empty()
-            && repo.files.iter().all(|f| self.state.selected_files.iter().any(|p| p == &f.path));
+            && repo
+                .files
+                .iter()
+                .all(|f| self.state.selected_files.iter().any(|p| p == &f.path));
         if all_selected {
             self.state.selected_files.clear();
         } else {

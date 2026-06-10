@@ -39,7 +39,11 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                     .iter()
                     .enumerate()
                     .map(|(i, t)| {
-                        let prefix = if i == state.timeline_selected { ">" } else { " " };
+                        let prefix = if i == state.timeline_selected {
+                            ">"
+                        } else {
+                            " "
+                        };
                         ListItem::new(format!("{}{} {}", prefix, t.rid, t.message))
                     })
                     .collect();
@@ -57,7 +61,11 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                         .iter()
                         .enumerate()
                         .map(|(i, t)| {
-                            let prefix = if i == state.history_selected { ">" } else { " " };
+                            let prefix = if i == state.history_selected {
+                                ">"
+                            } else {
+                                " "
+                            };
                             ListItem::new(format!("{}{} {}", prefix, t.rid, t.message))
                         })
                         .collect()
@@ -237,7 +245,10 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
         ));
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Discard"))
     } else if state.repo.is_none() {
-        let lines = vec![Line::from(vec![key_span("q", Color::Yellow), Span::raw(" quit")])];
+        let lines = vec![Line::from(vec![
+            key_span("q", Color::Yellow),
+            Span::raw(" quit"),
+        ])];
         Paragraph::new(Text::from(lines)).block(Block::default().borders(Borders::TOP))
     } else {
         let sel_count = state.selected_files.len();
@@ -309,7 +320,11 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
     if state.repo.is_none() {
         let popup_area = centered_rect(72, 42, frame.area());
         let popup = Paragraph::new(Text::from(info_box_lines()))
-            .block(Block::default().borders(Borders::ALL).title("Not a Fossil checkout"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Not a Fossil checkout"),
+            )
             .wrap(Wrap { trim: true });
         frame.render_widget(Clear, popup_area);
         frame.render_widget(popup, popup_area);
@@ -408,12 +423,16 @@ fn info_box_lines() -> Vec<Line<'static>> {
     vec![
         Line::from(vec![Span::styled(
             "lazyfossil could not find a Fossil checkout in this directory.",
-            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
         )]),
         Line::from(""),
         Line::from(vec![Span::styled(
             "What you can do:",
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
         )]),
         Line::from("  • move into a Fossil checkout and restart"),
         Line::from("  • run `fossil open <repo>` or `fossil checkout <uuid>`"),
@@ -479,7 +498,9 @@ mod tests {
     #[test]
     fn styled_message_line_highlights_markers() {
         let spans = styled_message_line("File [[path/to/file]] renamed");
-        assert!(spans.iter().any(|span| span.content.as_ref() == "path/to/file"));
+        assert!(spans
+            .iter()
+            .any(|span| span.content.as_ref() == "path/to/file"));
         assert!(spans.len() >= 3);
     }
 
@@ -492,7 +513,11 @@ mod tests {
     #[test]
     fn info_box_mentions_checkout_actions() {
         let lines = info_box_lines();
-        assert!(lines.iter().any(|line| line.to_string().contains("not find a Fossil checkout")));
-        assert!(lines.iter().any(|line| line.to_string().contains("press q to quit")));
+        assert!(lines
+            .iter()
+            .any(|line| line.to_string().contains("not find a Fossil checkout")));
+        assert!(lines
+            .iter()
+            .any(|line| line.to_string().contains("press q to quit")));
     }
 }

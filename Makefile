@@ -3,6 +3,8 @@ all:
 	rm -f target/debug/lazyfossil
 	rm -f target/release/lazyfossil
 	touch src/*.rs
+	cargo fmt --all
+	cargo fmt --all -- --check
 	cargo run --release -- --debug
 
 .PHONY: doc
