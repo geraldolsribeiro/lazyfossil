@@ -639,7 +639,9 @@ fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
                     PreviewKind::Plain | PreviewKind::Hex => Style::default().fg(Color::Reset),
                     PreviewKind::Toml => {
                         if line.starts_with('[') {
-                            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD)
                         } else if line.contains('=') {
                             Style::default().fg(Color::Yellow)
                         } else {
@@ -649,7 +651,11 @@ fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
                     PreviewKind::Json => {
                         if line.trim_start().starts_with('"') && line.contains(':') {
                             Style::default().fg(Color::Yellow)
-                        } else if line.contains('{') || line.contains('}') || line.contains('[') || line.contains(']') {
+                        } else if line.contains('{')
+                            || line.contains('}')
+                            || line.contains('[')
+                            || line.contains(']')
+                        {
                             Style::default().fg(Color::Cyan)
                         } else {
                             Style::default().fg(Color::Reset)
@@ -662,7 +668,9 @@ fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
                             || trimmed.starts_with("use ")
                             || trimmed.starts_with("mod ")
                         {
-                            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD)
                         } else if trimmed.starts_with("//") {
                             Style::default().fg(Color::DarkGray)
                         } else {
@@ -801,6 +809,23 @@ mod tests {
     }
 
     #[test]
+    fn preview_rendering_styles_notice_and_markdown() {
+        let notice = color_preview(
+            "Preview unavailable for file.txt\nPossible rename detected: extra.txt".to_string(),
+            PreviewKind::Notice,
+        );
+        let notice_lines = notice.lines.into_iter().collect::<Vec<_>>();
+        assert_eq!(notice_lines.len(), 2);
+        assert_eq!(notice_lines[0].spans[0].style.fg, Some(Color::Yellow));
+        assert_eq!(notice_lines[1].spans[0].style.fg, Some(Color::Cyan));
+
+        let md = color_preview("# Heading\n- item".to_string(), PreviewKind::Markdown);
+        let md_lines = md.lines.into_iter().collect::<Vec<_>>();
+        assert_eq!(md_lines[0].spans[0].style.fg, Some(Color::Cyan));
+        assert_eq!(md_lines[1].spans[0].style.fg, Some(Color::Yellow));
+    }
+
+    #[test]
     fn right_pane_title_includes_selected_context() {
         let mut state = AppState {
             tab: Tab::WorkingTree,
@@ -854,7 +879,10 @@ mod tests {
         state.repo.as_mut().unwrap().selected_file = 2;
         assert_eq!(right_pane_title(&state, "Diff"), "Extra: tmp.log");
         state.tab = Tab::Timeline;
-        assert_eq!(right_pane_title(&state, "Timeline details"), "Timeline details: abc123");
+        assert_eq!(
+            right_pane_title(&state, "Timeline details"),
+            "Timeline details: abc123"
+        );
     }
 
     #[test]

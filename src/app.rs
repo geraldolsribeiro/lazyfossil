@@ -277,7 +277,8 @@ impl App {
                                 match fs::read(&path) {
                                     Ok(bytes) => match String::from_utf8(bytes) {
                                         Ok(content) => {
-                                            self.state.preview_kind = preview_kind_for_path(&file.path);
+                                            self.state.preview_kind =
+                                                preview_kind_for_path(&file.path);
                                             Self::expand_tabs(&content)
                                         }
                                         Err(_) => {
@@ -1072,12 +1073,33 @@ mod tests {
 
     #[test]
     fn preview_kind_matches_file_type() {
-        assert!(matches!(preview_kind_for_path("README.md"), PreviewKind::Markdown));
-        assert!(matches!(preview_kind_for_path("Cargo.toml"), PreviewKind::Toml));
-        assert!(matches!(preview_kind_for_path("data.json"), PreviewKind::Json));
-        assert!(matches!(preview_kind_for_path("src/main.rs"), PreviewKind::Source));
-        assert!(matches!(preview_kind_for_path("Makefile"), PreviewKind::Source));
-        assert!(matches!(preview_kind_for_path("Dockerfile"), PreviewKind::Source));
-        assert!(matches!(preview_kind_for_path("notes.txt"), PreviewKind::Plain));
+        assert!(matches!(
+            preview_kind_for_path("README.md"),
+            PreviewKind::Markdown
+        ));
+        assert!(matches!(
+            preview_kind_for_path("Cargo.toml"),
+            PreviewKind::Toml
+        ));
+        assert!(matches!(
+            preview_kind_for_path("data.json"),
+            PreviewKind::Json
+        ));
+        assert!(matches!(
+            preview_kind_for_path("src/main.rs"),
+            PreviewKind::Source
+        ));
+        assert!(matches!(
+            preview_kind_for_path("Makefile"),
+            PreviewKind::Source
+        ));
+        assert!(matches!(
+            preview_kind_for_path("Dockerfile"),
+            PreviewKind::Source
+        ));
+        assert!(matches!(
+            preview_kind_for_path("notes.txt"),
+            PreviewKind::Plain
+        ));
     }
 }
