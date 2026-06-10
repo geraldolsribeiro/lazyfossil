@@ -24,6 +24,7 @@ pub struct TimelineEntry {
     pub user: String,
     pub message: String,
     pub date: String,
+    pub tags: String,
 }
 
 #[derive(Debug)]
@@ -102,7 +103,7 @@ impl FossilClient {
         &self,
         path: Option<&str>,
     ) -> std::result::Result<Vec<TimelineEntry>, FossilError> {
-        let mut args: Vec<String> = vec!["timeline", "-n", "50", "-t", "ci", "-F", "%h|%a|%d|%c"]
+        let mut args: Vec<String> = vec!["timeline", "-n", "50", "-t", "ci", "-F", "%h|%a|%d|%c|%t"]
             .into_iter()
             .map(|s| s.to_string())
             .collect();
@@ -366,13 +367,14 @@ fn merge_files(
 fn parse_timeline(out: &str) -> Vec<TimelineEntry> {
     out.lines()
         .filter_map(|line| {
-            let parts: Vec<_> = line.splitn(4, '|').collect();
-            if parts.len() == 4 {
+            let parts: Vec<_> = line.splitn(5, '|').collect();
+            if parts.len() == 5 {
                 Some(TimelineEntry {
                     rid: parts[0].trim().to_string(),
                     user: parts[1].trim().to_string(),
                     date: parts[2].trim().to_string(),
                     message: parts[3].trim().to_string(),
+                    tags: parts[4].trim().to_string(),
                 })
             } else {
                 None
@@ -425,13 +427,14 @@ mod tests {
     #[test]
     fn parses_timeline_format() {
         let entries = parse_timeline(
-            "abc123|Alice|2026-06-04 10:00|Fix bug\nzzz999|Bob|2026-06-04 11:00|Refactor\n",
+            "abc123|Alice|2026-06-04 10:00|Fix bug|sym-v0.7.1\nzzz999|Bob|2026-06-04 11:00|Refactor|trunk\n",
         );
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[0].rid, "abc123");
         assert_eq!(entries[0].user, "Alice");
         assert_eq!(entries[0].date, "2026-06-04 10:00");
         assert_eq!(entries[0].message, "Fix bug");
+        assert_eq!(entries[0].tags, "sym-v0.7.1");
     }
 
     #[test]

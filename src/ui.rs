@@ -48,7 +48,17 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         } else {
                             " "
                         };
-                        ListItem::new(format!("{}{} {}", prefix, t.rid, t.message))
+                        let mut spans = Vec::new();
+                        spans.push(Span::raw(format!("{}{}", prefix, t.rid)));
+                        if !t.tags.is_empty() {
+                            spans.push(Span::raw(" "));
+                            spans.push(Span::styled(
+                                format!("[{}]", t.tags),
+                                Style::default().fg(Color::Cyan),
+                            ));
+                        }
+                        spans.push(Span::raw(format!(" {}", t.message)));
+                        ListItem::new(Line::from(spans))
                     })
                     .collect();
                 List::new(items)
@@ -171,6 +181,12 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         Span::styled("message ", Style::default().fg(Color::DarkGray)),
                         Span::raw(entry.message.clone()),
                     ]));
+                    if !entry.tags.is_empty() {
+                        lines.push(Line::from(vec![
+                            Span::styled("tags ", Style::default().fg(Color::DarkGray)),
+                            Span::styled(entry.tags.clone(), Style::default().fg(Color::Cyan)),
+                        ]));
+                    }
                     lines.push(Line::from(""));
                 }
                 let diff = state
@@ -728,4 +744,5 @@ mod tests {
         };
         assert!(footer_text.to_string().contains("mouse select/scroll"));
     }
+
 }
