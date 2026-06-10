@@ -23,7 +23,11 @@ fix:
 	RUSTFLAGS="-D unused-code" \
 		/home/geraldo/git/geraldolsribeiro/cargo/target/release/cargo fix
 
-.PHONY: media
-media:
+.PHONY: test
+test:
+	cargo test
+
+.PHONY: vhs
+vhs:
 	cargo build --release
 	$(MAKE) -C vhs

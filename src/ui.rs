@@ -198,7 +198,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 .clone()
                 .unwrap_or_else(|| "Open a Fossil checkout to begin".to_string()),
         )
-        .block(Block::default().borders(Borders::ALL).title("Details"))
+        .block(Block::default().borders(Borders::ALL).title("Status"))
     };
     frame.render_stateful_widget(left, body[0], &mut file_state);
     frame.render_widget(right, body[1]);
@@ -208,18 +208,7 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
             CommitTarget::Selected => "selected",
             CommitTarget::Current => "current",
         };
-        let text = Text::from(vec![
-            Line::from(vec![
-                Span::raw("commit "),
-                key_span(target, Color::Yellow),
-                Span::raw(": "),
-                Span::styled(
-                    msg.clone(),
-                    Style::default().bg(Color::DarkGray).fg(Color::White),
-                ),
-            ]),
-            confirmation_hint_line(),
-        ]);
+        let text = commit_prompt_text(target, msg);
         cursor = Some((
             areas[2].x + 1 + 7 + target.len() as u16 + 2 + msg.chars().count() as u16,
             areas[2].y + 1,
@@ -285,12 +274,14 @@ pub fn draw(frame: &mut Frame, state: &AppState) {
                 }
             }
         }
-        lines.push(Line::from(vec![
-            Span::styled("selected files", Style::default().fg(Color::DarkGray)),
-            Span::raw(": "),
-            Span::styled(sel_count.to_string(), Style::default().fg(Color::White)),
-        ]));
-        Paragraph::new(Text::from(lines)).block(Block::default().borders(Borders::TOP))
+        if state.tab == Tab::WorkingTree {
+            lines.push(Line::from(vec![
+                Span::styled("selected files", Style::default().fg(Color::DarkGray)),
+                Span::raw(": "),
+                Span::styled(sel_count.to_string(), Style::default().fg(Color::White)),
+            ]));
+        }
+        Paragraph::new(Text::from(lines)).block(Block::default().borders(Borders::TOP).title("Shortcuts"))
     };
 
     frame.render_widget(footer, areas[2]);
@@ -346,6 +337,21 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+fn commit_prompt_text(target: &str, msg: &str) -> Text<'static> {
+    Text::from(vec![
+        Line::from(vec![
+            Span::raw("commit "),
+            key_span(target, Color::Yellow),
+            Span::raw(": "),
+            Span::styled(
+                msg.to_string(),
+                Style::default().bg(Color::DarkGray).fg(Color::White),
+            ),
+        ]),
+        confirmation_hint_line(),
+    ])
 }
 
 fn confirmation_prompt(prefix: &str, value: &str, suffix: &str) -> Text<'static> {
@@ -550,5 +556,58 @@ mod tests {
         assert!(lines
             .iter()
             .any(|line| line.to_string().contains("press q to quit")));
+    }
+
+    #[test]
+    fn commit_prompt_text_uses_selected_target_and_message() {
+        let text = commit_prompt_text("selected", "Fix bug");
+        let lines = text.lines.into_iter().collect::<Vec<_>>();
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0].spans[1].content, "selected");
+        assert_eq!(lines[0].spans[3].content, "Fix bug");
+    }
+
+    #[test]
+    fn footer_omits_selected_files_in_non_working_tree_tabs() {
+        let mut state = AppState {
+            tab: Tab::FileHistory,
+            repo: None,
+            error: None,
+            diff: None,
+            diff_scroll: 0,
+            selected_files: vec!["a.txt".to_string()],
+            commit_prompt: None,
+            commit_target: CommitTarget::Selected,
+            ignore_prompt: None,
+            discard_prompt: None,
+            history: vec![],
+            history_diff: None,
+            timeline_diff: None,
+            redraw: false,
+            show_hex: false,
+            history_selected: 0,
+            timeline_selected: 0,
+            preview_kind: PreviewKind::Diff,
+        };
+        let footer = if state.tab == Tab::WorkingTree {
+            let sel_count = state.selected_files.len();
+            let mut lines = vec![Line::from(vec![Span::raw("q")])];
+            lines.push(Line::from(vec![
+                Span::styled("selected files", Style::default().fg(Color::DarkGray)),
+                Span::raw(": "),
+                Span::styled(sel_count.to_string(), Style::default().fg(Color::White)),
+            ]));
+            Text::from(lines)
+        } else {
+            Text::from(vec![Line::from(vec![Span::raw("q")])])
+        };
+        assert!(!footer.to_string().contains("selected files"));
+        state.tab = Tab::Timeline;
+        let footer = if state.tab == Tab::WorkingTree {
+            Text::from(vec![Line::from(vec![Span::raw("selected files")])])
+        } else {
+            Text::from(vec![Line::from(vec![Span::raw("q")])])
+        };
+        assert!(!footer.to_string().contains("selected files"));
     }
 }
