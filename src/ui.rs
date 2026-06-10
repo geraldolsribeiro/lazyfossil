@@ -41,7 +41,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
 
     let body = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(35), Constraint::Percentage(65)])
+        .constraints([Constraint::Percentage(38), Constraint::Percentage(62)])
         .split(areas[1]);
 
     let mut file_state = match state.tab {
