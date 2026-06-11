@@ -93,7 +93,12 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .collect();
                 List::new(items)
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-                    .block(Block::default().borders(Borders::ALL).title("Timeline").title_bottom(Line::from("Up|Dn").right_aligned()))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("Timeline")
+                            .title_bottom(Line::from("Up|Dn").right_aligned()),
+                    )
             }
             Tab::FileHistory => {
                 file_state.select(Some(state.history_selected));
@@ -131,7 +136,12 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .unwrap_or_else(|| "File history".to_string());
                 List::new(items)
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-                    .block(Block::default().borders(Borders::ALL).title(title).title_bottom(Line::from("Up|Dn").right_aligned()))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title(title)
+                            .title_bottom(Line::from("Up|Dn").right_aligned()),
+                    )
             }
             Tab::Changes => {
                 let visible: Vec<_> = repo
@@ -181,7 +191,12 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .collect();
                 List::new(items)
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-                    .block(Block::default().borders(Borders::ALL).title("Changes").title_bottom(Line::from("Up|Dn").right_aligned()))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("Changes")
+                            .title_bottom(Line::from("Up|Dn").right_aligned()),
+                    )
             }
             Tab::WorkingTree => {
                 file_state.select(Some(repo.selected_file));
@@ -213,12 +228,21 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .collect();
                 List::new(items)
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-                    .block(Block::default().borders(Borders::ALL).title("Files").title_bottom(Line::from("Up|Dn").right_aligned()))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("Files")
+                            .title_bottom(Line::from("Up|Dn").right_aligned()),
+                    )
             }
         }
     } else {
-        List::new(vec![ListItem::new("No repository detected")])
-            .block(Block::default().borders(Borders::ALL).title("Files").title_bottom(Line::from("Up|Dn").right_aligned()))
+        List::new(vec![ListItem::new("No repository detected")]).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Files")
+                .title_bottom(Line::from("Up|Dn").right_aligned()),
+        )
     };
 
     let right = if state.repo.is_some() {

@@ -1,5 +1,6 @@
 .PHONY: all
 all:
+	cargo fmt --all
 	cargo run --release -- --debug
 
 .PHONY: doc
