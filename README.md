@@ -137,7 +137,7 @@ lazyfossil’s main screen is built around four views (Changes, Working tree, Fi
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
 
-Current version: `0.7.3`.
+Current version: `0.8.1`.
 
 ## Star History
 
