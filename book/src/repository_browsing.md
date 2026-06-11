@@ -1,6 +1,23 @@
 # Repository browsing
 
-lazyfossil’s main screen is built around three views (Working tree, File history, and Timeline):
+## Navigation
+
+See the [Keybindings](./keybindings.md) chapter for the current navigation and action keys.
+
+lazyfossil’s main screen is built around four views (Changes, Working tree, File history, and Timeline):
+
+## Changes
+
+This is the filtered file list.
+
+Use it to:
+
+- review only files that need attention
+- see edited, added, deleted, missing, extra, and conflict files
+- keep selection in sync with the working tree
+- focus on commit and discard candidates quickly
+
+![Changes demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/changes.gif)
 
 ## Working tree
 
@@ -40,6 +57,3 @@ Use it to:
 
 ![Timeline demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/timeline.gif)
 
-## Navigation
-
-See the [Keybindings](./keybindings.md) chapter for the current navigation and action keys.
