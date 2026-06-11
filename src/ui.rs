@@ -177,14 +177,15 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         let kind = file_state_symbol(&f.status);
                         let mut item =
                             ListItem::new(format!("{}{} {} {}", prefix, selected, kind, f.path));
-                        if f.status == "extra" {
-                            item = item.style(Style::default().fg(Color::Yellow));
-                        } else if f.status == "edited" {
-                            item = item.style(Style::default().fg(Color::Yellow));
-                        } else if f.status == "missing" {
-                            item = item.style(Style::default().fg(Color::Red));
-                        } else if f.status == "checked-out" {
-                            item = item.style(Style::default().fg(Color::DarkGray));
+                        let color = match f.status.as_str() {
+                            "checked-out" => Color::DarkGray,
+                            "extra" => Color::Yellow,
+                            "edited" => Color::Blue,
+                            "missing" => Color::Red,
+                            _ => Color::Reset,
+                        };
+                        if color != Color::Reset {
+                            item = item.style(Style::default().fg(color));
                         }
                         item
                     })
@@ -214,14 +215,15 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         let kind = file_state_symbol(&f.status);
                         let mut item =
                             ListItem::new(format!("{}{} {} {}", prefix, selected, kind, f.path));
-                        if f.status == "checked-out" {
-                            item = item.style(Style::default().fg(Color::DarkGray));
-                        } else if f.status == "extra" {
-                            item = item.style(Style::default().fg(Color::Yellow));
-                        } else if f.status == "edited" {
-                            item = item.style(Style::default().fg(Color::Yellow));
-                        } else if f.status == "missing" {
-                            item = item.style(Style::default().fg(Color::Red));
+                        let color = match f.status.as_str() {
+                            "checked-out" => Color::DarkGray,
+                            "extra" => Color::Yellow,
+                            "edited" => Color::Blue,
+                            "missing" => Color::Red,
+                            _ => Color::Reset,
+                        };
+                        if color != Color::Reset {
+                            item = item.style(Style::default().fg(color));
                         }
                         item
                     })
