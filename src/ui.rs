@@ -126,8 +126,21 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .enumerate()
                     .filter(|(_, f)| f.status != "checked-out")
                     .collect();
+                let viewport_rows = body[0].height.saturating_sub(2) as usize;
                 let selected = state.changes_selected.min(visible.len().saturating_sub(1));
-                file_state.select(Some(selected));
+                let offset = if visible.len() <= viewport_rows {
+                    0
+                } else {
+                    selected
+                        .saturating_sub(viewport_rows / 2)
+                        .min(visible.len().saturating_sub(viewport_rows))
+                };
+                file_state = ListState::default().with_offset(offset);
+                if visible.is_empty() {
+                    file_state.select(None);
+                } else {
+                    file_state.select(Some(selected));
+                }
                 let items: Vec<ListItem> = visible
                     .into_iter()
                     .map(|(i, f)| {
@@ -252,7 +265,10 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     ];
                     if !entry.tags.is_empty() {
                         commit_line.push(Span::raw(" "));
-                        commit_line.push(Span::styled(entry.tags.clone(), Style::default().fg(Color::Cyan)));
+                        commit_line.push(Span::styled(
+                            entry.tags.clone(),
+                            Style::default().fg(Color::Cyan),
+                        ));
                     }
                     lines.push(Line::from(commit_line));
                     lines.push(Line::from(vec![
@@ -308,7 +324,10 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         ];
                         if !entry.tags.is_empty() {
                             commit_line.push(Span::raw(" "));
-                            commit_line.push(Span::styled(entry.tags.clone(), Style::default().fg(Color::Cyan)));
+                            commit_line.push(Span::styled(
+                                entry.tags.clone(),
+                                Style::default().fg(Color::Cyan),
+                            ));
                         }
                         lines.push(Line::from(commit_line));
                         lines.push(Line::from(vec![
@@ -640,19 +659,6 @@ fn right_pane_title(state: &AppState, fallback: &str) -> String {
     }
 }
 
-fn preview_title(kind: PreviewKind) -> &'static str {
-    match kind {
-        PreviewKind::Diff => "Diff",
-        PreviewKind::Plain => "Plain preview",
-        PreviewKind::Markdown => "Markdown preview",
-        PreviewKind::Toml => "TOML preview",
-        PreviewKind::Json => "JSON preview",
-        PreviewKind::Source => "Source preview",
-        PreviewKind::Hex => "Hex preview",
-        PreviewKind::Notice => "Preview",
-    }
-}
-
 fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
     Text::from(
         diff.lines()
@@ -861,18 +867,6 @@ mod tests {
             Text::from(vec![Line::from(vec![Span::raw("q")])])
         };
         assert!(!footer.to_string().contains("selected files"));
-    }
-
-    #[test]
-    fn preview_titles_match_context() {
-        assert_eq!(preview_title(PreviewKind::Diff), "Diff");
-        assert_eq!(preview_title(PreviewKind::Plain), "Plain preview");
-        assert_eq!(preview_title(PreviewKind::Markdown), "Markdown preview");
-        assert_eq!(preview_title(PreviewKind::Toml), "TOML preview");
-        assert_eq!(preview_title(PreviewKind::Json), "JSON preview");
-        assert_eq!(preview_title(PreviewKind::Source), "Source preview");
-        assert_eq!(preview_title(PreviewKind::Hex), "Hex preview");
-        assert_eq!(preview_title(PreviewKind::Notice), "Preview");
     }
 
     #[test]

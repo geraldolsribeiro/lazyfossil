@@ -6,6 +6,7 @@
 - UI polish
   - preview styling per file type
   - spacing and layout tweaks
+  - Changes tab scrolling and selection alignment
 - History and details
   - improve file history browsing
   - better timeline entry details
@@ -30,7 +31,7 @@
   - edge-case fixes in selection
 
 ### Done
-- Working tree, file history, and timeline views
+- Changes, working tree, file history, and timeline views
 - Temporary selection-based commit flow
 - Inline commit message prompt
 - Ignore-file support
@@ -48,4 +49,4 @@
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
 
-Current version: `0.7.3`.
+Current version: `0.8.0`.

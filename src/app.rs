@@ -173,9 +173,7 @@ impl App {
                 .client
                 .history_timeline(Some(&path))
                 .unwrap_or_default();
-            if file_changed {
-                self.state.history_selected = 0;
-            } else if self.state.history_selected >= self.state.history.len() {
+            if file_changed || self.state.history_selected >= self.state.history.len() {
                 self.state.history_selected = 0;
             }
             self.state.history_path = Some(path);
@@ -718,7 +716,6 @@ impl App {
                         repo.selected_file = idx;
                     }
                 }
-                self.state.changes_selected = self.changes_selected_for_current_file();
                 self.center_changes_scroll();
                 self.refresh_views();
             }
@@ -744,7 +741,14 @@ impl App {
     fn select_next(&mut self) {
         match self.state.tab {
             Tab::Timeline => {
-                if self.state.timeline_selected + 1 < self.state.repo.as_ref().map(|r| r.timeline.len()).unwrap_or(0) {
+                if self.state.timeline_selected + 1
+                    < self
+                        .state
+                        .repo
+                        .as_ref()
+                        .map(|r| r.timeline.len())
+                        .unwrap_or(0)
+                {
                     self.state.timeline_selected += 1;
                 }
                 self.sync_timeline_scroll();
@@ -769,7 +773,6 @@ impl App {
                         repo.selected_file = idx;
                     }
                 }
-                self.state.changes_selected = self.changes_selected_for_current_file();
                 self.center_changes_scroll();
                 self.refresh_views();
             }
@@ -800,23 +803,33 @@ impl App {
             self.state.files_scroll = 0;
             return;
         }
-        let selected = self.changes_selected_for_current_file().min(visible_len - 1);
+        let selected = self.state.changes_selected.min(visible_len - 1);
         let half = 5usize;
         self.state.files_scroll = selected.saturating_sub(half);
     }
 
-    fn changes_selected_for_current_file(&self) -> usize {
-        let Some(repo) = self.state.repo.as_ref() else { return 0; };
-        let visible: Vec<_> = repo
+    fn sync_changes_selection(&mut self) {
+        let Some(repo) = &mut self.state.repo else {
+            return;
+        };
+        let visible: Vec<usize> = repo
             .files
             .iter()
             .enumerate()
             .filter(|(_, f)| f.status != "checked-out")
+            .map(|(i, _)| i)
             .collect();
-        visible
-            .iter()
-            .position(|(idx, _)| *idx == repo.selected_file)
-            .unwrap_or(0)
+        if visible.is_empty() {
+            self.state.changes_selected = 0;
+            return;
+        }
+        if let Some(pos) = visible.iter().position(|idx| *idx == repo.selected_file) {
+            self.state.changes_selected = pos;
+        } else {
+            self.state.changes_selected = 0;
+            repo.selected_file = visible[0];
+        }
+        self.center_changes_scroll();
     }
 
     fn change_file_indices(&self) -> Vec<usize> {
@@ -886,6 +899,18 @@ impl App {
                         self.state.history_selected = index;
                         self.refresh_history();
                         self.refresh_history_details();
+                    }
+                }
+                Tab::Changes => {
+                    let visible = self.change_file_indices();
+                    let index = self.state.files_scroll.saturating_add(index);
+                    if let Some(repo) = self.state.repo.as_mut() {
+                        if let Some(file_index) = visible.get(index).copied() {
+                            repo.selected_file = file_index;
+                            self.state.changes_selected = index.min(visible.len().saturating_sub(1));
+                            self.center_changes_scroll();
+                            self.refresh_views();
+                        }
                     }
                 }
                 _ => {
@@ -968,8 +993,7 @@ impl App {
                                         self.select_file_by_path(path);
                                     }
                                 } else if matches!(self.state.tab, Tab::Changes) {
-                                    self.state.changes_selected = self.changes_selected_for_current_file();
-                                    self.center_changes_scroll();
+                                    self.sync_changes_selection();
                                 }
                                 match self.state.tab {
                                     Tab::Timeline => self.refresh_timeline(),
@@ -1110,6 +1134,10 @@ mod tests {
                     status: "edited".into(),
                 },
                 FileStatus {
+                    path: "clean.txt".into(),
+                    status: "checked-out".into(),
+                },
+                FileStatus {
                     path: "extra.txt".into(),
                     status: "extra".into(),
                 },
@@ -1137,7 +1165,10 @@ mod tests {
         app.state.repo = Some(repo());
 
         app.toggle_select_all();
-        assert_eq!(app.state.selected_files, vec!["tracked.txt", "extra.txt"]);
+        assert_eq!(
+            app.state.selected_files,
+            vec!["tracked.txt", "clean.txt", "extra.txt"]
+        );
 
         app.toggle_select_all();
         assert!(app.state.selected_files.is_empty());
@@ -1148,7 +1179,7 @@ mod tests {
         let mut app = App::new(false);
         app.state.repo = Some(repo());
         assert_eq!(app.current_file_path().as_deref(), Some("tracked.txt"));
-        app.state.repo.as_mut().unwrap().selected_file = 1;
+        app.state.repo.as_mut().unwrap().selected_file = 2;
         assert_eq!(app.current_file_path().as_deref(), Some("extra.txt"));
     }
 
@@ -1198,9 +1229,48 @@ mod tests {
     fn click_file_uses_scrolled_offsets() {
         let mut app = App::new(false);
         app.state.repo = Some(repo());
+        app.state.tab = Tab::WorkingTree;
         app.state.files_scroll = 1;
         app.click_file(1, 4);
         assert_eq!(app.state.repo.as_ref().unwrap().selected_file, 1);
+    }
+
+    #[test]
+    fn click_file_uses_changes_filter_order() {
+        let mut app = App::new(false);
+        app.state.repo = Some(repo());
+        app.state.tab = Tab::Changes;
+        app.state.files_scroll = 0;
+        app.click_file(1, 5); // second visible row
+        assert_eq!(app.state.repo.as_ref().unwrap().selected_file, 2);
+    }
+
+    #[test]
+    fn changes_tab_selects_first_visible_file_when_selection_is_hidden() {
+        let mut app = App::new(false);
+        app.state.repo = Some(repo());
+        app.state.repo.as_mut().unwrap().selected_file = 1; // clean file, not in Changes
+        app.state.tab = Tab::Changes;
+        app.sync_changes_selection();
+        assert_eq!(app.state.changes_selected, 0);
+        assert_eq!(app.state.repo.as_ref().unwrap().selected_file, 0);
+    }
+
+    #[test]
+    fn changes_tab_selection_is_none_when_list_is_empty() {
+        let mut app = App::new(false);
+        app.state.repo = Some(RepoState {
+            files: vec![FileStatus {
+                path: "clean.txt".into(),
+                status: "checked-out".into(),
+            }],
+            timeline: vec![],
+            selected_file: 0,
+        });
+        app.state.tab = Tab::Changes;
+        app.sync_changes_selection();
+        assert_eq!(app.state.changes_selected, 0);
+        assert_eq!(app.change_file_indices().len(), 0);
     }
 
     #[test]
@@ -1225,7 +1295,6 @@ mod tests {
         let conflict = app.conflict_message("conflict.txt");
         assert!(conflict.contains("[[conflict.txt]]"));
     }
-
 
     #[test]
     fn preview_kind_matches_file_type() {

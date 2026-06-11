@@ -68,7 +68,7 @@ There are mirror repositories at
 
 **lazyfossil** is still in alpha, but it is already useful for everyday Fossil work. This project uses lazyfossil itself while we continue refining it, so the screenshots and demos reflect real use rather than a polished finish. If you work with Fossil from the terminal, try it and see whether it fits your workflow.
 
-lazyfossil’s main screen is built around three views (Working tree, File history, and Timeline):
+lazyfossil’s main screen is built around four views (Changes, Working tree, File history, and Timeline):
 
 ![working tree demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/working_tree.gif)
 
@@ -78,7 +78,7 @@ lazyfossil’s main screen is built around three views (Working tree, File histo
 
 ## Why use lazyfossil
 - Keep Fossil work inside a fast terminal UI
-- See files, history, and diffs without leaving the app
+- See filtered changes, files, history, and diffs without leaving the app
 - Commit selected files or the current file, without a staging area
 - Handle sync, ignore, and discard tasks from one place
 - Stay productive even for binary files and missing-file cases
@@ -95,17 +95,6 @@ lazyfossil’s main screen is built around three views (Working tree, File histo
 
 ## Roadmap
 
-### Done
-- Working tree, file history, and timeline views
-- Temporary selection-based commit flow
-- Inline commit message prompt
-- Ignore-file support
-- Sync support
-- Binary preview fallback
-- XDG config file support
-- Book documentation for the main views and config
-- VHS demo tapes for the main flows
-
 ### Now
 - UI polish and layout tweaks
 - Better file history and timeline details
@@ -114,6 +103,17 @@ lazyfossil’s main screen is built around three views (Working tree, File histo
 ### Next
 - Quality and tests
 - Navigation and mouse
+
+### Done
+- Changes, working tree, file history, and timeline views
+- Temporary selection-based commit flow
+- Inline commit message prompt
+- Ignore-file support
+- Sync support
+- Binary preview fallback
+- XDG config file support
+- Book documentation for the main views and config
+- VHS demo tapes for the main flows
 
 ### Done
 - Working tree, file history, and timeline views

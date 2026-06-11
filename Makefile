@@ -16,7 +16,6 @@ fix:
 	RUSTFLAGS="-D unused-code" \
 		/home/geraldo/git/geraldolsribeiro/cargo/target/release/cargo fix
 
-
 .PHONY: test
 test:
 	/home/geraldo/git/geraldolsribeiro/cargo/target/release/cargo \
