@@ -160,7 +160,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .map(|(i, f)| {
                         let prefix = if i == repo.selected_file { ">" } else { " " };
                         let selected = if state.selected_files.iter().any(|p| p == &f.path) {
-                            "*"
+                            "●"
                         } else {
                             " "
                         };
@@ -192,7 +192,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .map(|(i, f)| {
                         let prefix = if i == repo.selected_file { ">" } else { " " };
                         let selected = if state.selected_files.iter().any(|p| p == &f.path) {
-                            "*"
+                            "●"
                         } else {
                             " "
                         };
