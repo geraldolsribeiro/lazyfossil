@@ -72,6 +72,7 @@ pub struct AppState {
     pub discard_prompt: Option<String>,
     pub history: Vec<crate::fossil::TimelineEntry>,
     pub history_diff: Option<String>,
+    pub history_path: Option<String>,
     pub timeline_diff: Option<String>,
     pub redraw: bool,
     pub show_hex: bool,
@@ -119,6 +120,7 @@ impl App {
                 discard_prompt: None,
                 history: Vec::new(),
                 history_diff: None,
+                history_path: None,
                 timeline_diff: None,
                 redraw: false,
                 show_hex: false,
@@ -150,6 +152,7 @@ impl App {
                 self.state.history_selected = 0;
                 self.state.timeline_selected = 0;
                 self.state.history_diff = None;
+                self.state.history_path = None;
                 self.state.timeline_diff = None;
                 self.state.selected_files.clear();
                 self.state.error = Some("Not inside a Fossil checkout".to_string());
@@ -160,13 +163,17 @@ impl App {
 
     fn refresh_history(&mut self) {
         if let Some(path) = self.current_file_path() {
+            let file_changed = self.state.history_path.as_deref() != Some(path.as_str());
             self.state.history = self
                 .client
                 .history_timeline(Some(&path))
                 .unwrap_or_default();
-            if self.state.history_selected >= self.state.history.len() {
+            if file_changed {
+                self.state.history_selected = 0;
+            } else if self.state.history_selected >= self.state.history.len() {
                 self.state.history_selected = 0;
             }
+            self.state.history_path = Some(path);
             self.refresh_history_details();
         }
     }
