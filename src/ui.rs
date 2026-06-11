@@ -1023,6 +1023,15 @@ mod tests {
     }
 
     #[test]
+    fn display_timeline_tags_filters_branch_names() {
+        let tags = display_timeline_tags(
+            "sym-v0.7.1, trunk, v0.7.1",
+            &["trunk".to_string(), "main".to_string()],
+        );
+        assert_eq!(tags, "sym-v0.7.1, v0.7.1");
+    }
+
+    #[test]
     fn commit_prompt_helper_formats_message() {
         let text = commit_prompt_text("selected", "Ship it");
         assert!(text.to_string().contains("commit selected: Ship it"));
