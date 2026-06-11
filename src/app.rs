@@ -718,6 +718,7 @@ impl App {
                         repo.selected_file = idx;
                     }
                 }
+                self.state.changes_selected = self.changes_selected_for_current_file();
                 self.center_changes_scroll();
                 self.refresh_views();
             }
@@ -768,6 +769,7 @@ impl App {
                         repo.selected_file = idx;
                     }
                 }
+                self.state.changes_selected = self.changes_selected_for_current_file();
                 self.center_changes_scroll();
                 self.refresh_views();
             }
@@ -798,9 +800,23 @@ impl App {
             self.state.files_scroll = 0;
             return;
         }
-        let selected = self.state.changes_selected.min(visible_len - 1);
+        let selected = self.changes_selected_for_current_file().min(visible_len - 1);
         let half = 5usize;
         self.state.files_scroll = selected.saturating_sub(half);
+    }
+
+    fn changes_selected_for_current_file(&self) -> usize {
+        let Some(repo) = self.state.repo.as_ref() else { return 0; };
+        let visible: Vec<_> = repo
+            .files
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| f.status != "checked-out")
+            .collect();
+        visible
+            .iter()
+            .position(|(idx, _)| *idx == repo.selected_file)
+            .unwrap_or(0)
     }
 
     fn change_file_indices(&self) -> Vec<usize> {
@@ -952,6 +968,7 @@ impl App {
                                         self.select_file_by_path(path);
                                     }
                                 } else if matches!(self.state.tab, Tab::Changes) {
+                                    self.state.changes_selected = self.changes_selected_for_current_file();
                                     self.center_changes_scroll();
                                 }
                                 match self.state.tab {
