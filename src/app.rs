@@ -907,7 +907,8 @@ impl App {
                     if let Some(repo) = self.state.repo.as_mut() {
                         if let Some(file_index) = visible.get(index).copied() {
                             repo.selected_file = file_index;
-                            self.state.changes_selected = index.min(visible.len().saturating_sub(1));
+                            self.state.changes_selected =
+                                index.min(visible.len().saturating_sub(1));
                             self.center_changes_scroll();
                             self.refresh_views();
                         }

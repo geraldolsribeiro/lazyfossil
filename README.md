@@ -13,17 +13,18 @@
 **lazyfossil** helps you work with **Fossil SCM** from the terminal in a simpler way:
 browse files, see history, preview changes, and commit or sync without extra friction.
 
-* <https://lazyfossil.org>
-* <https://chiselapp.com/user/geraldo/repository/lazyfossil/>
-* <https://github.com/geraldolsribeiro/lazyfossil>
-* <https://crates.io/crates/lazyfossil>
-
-
 - Provide a fast terminal workflow for Fossil checkouts
 - Combine working-tree and history browsing in a single UI
 - Commit subsets of files without a staging area
 - Start with a small, practical MVP and refine it over time
 - Show a clear "not in a checkout" state when launched outside Fossil
+
+## Important URLs
+
+* <https://lazyfossil.org>
+* <https://chiselapp.com/user/geraldo/repository/lazyfossil/>
+* <https://github.com/geraldolsribeiro/lazyfossil>
+* <https://crates.io/crates/lazyfossil>
 
 ## Quick start
 

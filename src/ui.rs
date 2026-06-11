@@ -5,6 +5,20 @@ use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap};
 
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+fn utf8_state_symbols() -> bool {
+    if cfg!(windows) {
+        return true;
+    }
+    for key in ["LC_ALL", "LC_CTYPE", "LANG"] {
+        if let Ok(value) = std::env::var(key) {
+            let upper = value.to_uppercase();
+            if upper.contains("UTF-8") || upper.contains("UTF8") {
+                return true;
+            }
+        }
+    }
+    false
+}
 
 pub fn draw(frame: &mut Frame, state: &mut AppState) {
     let mut cursor = None;
@@ -150,21 +164,17 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         } else {
                             " "
                         };
-                        let kind = match f.status.as_str() {
-                            "extra" => "??",
-                            "edited" => "M",
-                            "added" => "A",
-                            "deleted" => "D",
-                            "missing" => "!",
-                            "conflict" => "C",
-                            _ => "✓",
-                        };
+                        let kind = file_state_symbol(&f.status);
                         let mut item =
                             ListItem::new(format!("{}{} {} {}", prefix, selected, kind, f.path));
-                        if f.status == "edited" {
-                            item = item.style(Style::default().fg(Color::LightRed));
+                        if f.status == "extra" {
+                            item = item.style(Style::default().fg(Color::Yellow));
+                        } else if f.status == "edited" {
+                            item = item.style(Style::default().fg(Color::Yellow));
                         } else if f.status == "missing" {
                             item = item.style(Style::default().fg(Color::Red));
+                        } else if f.status == "checked-out" {
+                            item = item.style(Style::default().fg(Color::DarkGray));
                         }
                         item
                     })
@@ -186,21 +196,15 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         } else {
                             " "
                         };
-                        let kind = match f.status.as_str() {
-                            "extra" => "??",
-                            "edited" => "M",
-                            "added" => "A",
-                            "deleted" => "D",
-                            "missing" => "!",
-                            "conflict" => "C",
-                            _ => "✓",
-                        };
+                        let kind = file_state_symbol(&f.status);
                         let mut item =
                             ListItem::new(format!("{}{} {} {}", prefix, selected, kind, f.path));
                         if f.status == "checked-out" {
-                            item = item.style(Style::default().fg(Color::Green));
+                            item = item.style(Style::default().fg(Color::DarkGray));
+                        } else if f.status == "extra" {
+                            item = item.style(Style::default().fg(Color::Yellow));
                         } else if f.status == "edited" {
-                            item = item.style(Style::default().fg(Color::LightRed));
+                            item = item.style(Style::default().fg(Color::Yellow));
                         } else if f.status == "missing" {
                             item = item.style(Style::default().fg(Color::Red));
                         }
@@ -625,6 +629,30 @@ fn info_box_lines() -> Vec<Line<'static>> {
     ]
 }
 
+fn file_state_symbol(status: &str) -> &'static str {
+    if utf8_state_symbols() {
+        match status {
+            "extra" => "❓",
+            "edited" => "✎",
+            "added" => "➕",
+            "deleted" => "➖",
+            "missing" => "✖",
+            "conflict" => "⚠",
+            _ => "✓",
+        }
+    } else {
+        match status {
+            "extra" => "??",
+            "edited" => "M",
+            "added" => "A",
+            "deleted" => "D",
+            "missing" => "!",
+            "conflict" => "C",
+            _ => "✓",
+        }
+    }
+}
+
 fn right_pane_title(state: &AppState, fallback: &str) -> String {
     match state.tab {
         Tab::Changes | Tab::WorkingTree => state
@@ -680,7 +708,7 @@ fn color_preview(diff: String, kind: PreviewKind) -> Text<'static> {
                                 .fg(Color::Yellow)
                                 .add_modifier(Modifier::BOLD)
                         } else if line.starts_with("+++") || line.starts_with("---") {
-                            Style::default().fg(Color::Blue)
+                            Style::default().fg(Color::Yellow)
                         } else if line.starts_with("@@") {
                             Style::default()
                                 .fg(Color::Cyan)
