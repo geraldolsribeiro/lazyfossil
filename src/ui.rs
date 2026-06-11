@@ -17,11 +17,12 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
         ])
         .split(frame.area());
 
-    let tabs = Tabs::new(vec!["Working tree", "File history", "Timeline"])
+    let tabs = Tabs::new(vec!["Changes", "Working tree", "File history", "Timeline"])
         .select(match state.tab {
-            Tab::WorkingTree => 0,
-            Tab::FileHistory => 1,
-            Tab::Timeline => 2,
+            Tab::Changes => 0,
+            Tab::WorkingTree => 1,
+            Tab::FileHistory => 2,
+            Tab::Timeline => 3,
         })
         .block(
             Block::default()
@@ -45,7 +46,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
         .split(areas[1]);
 
     let mut file_state = match state.tab {
-        Tab::WorkingTree => ListState::default().with_offset(state.files_scroll),
+        Tab::Changes | Tab::WorkingTree => ListState::default().with_offset(state.files_scroll),
         Tab::FileHistory => ListState::default().with_offset(state.history_scroll),
         Tab::Timeline => ListState::default().with_offset(state.timeline_scroll),
     };
@@ -118,7 +119,48 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
                     .block(Block::default().borders(Borders::ALL).title(title))
             }
-            _ => {
+            Tab::Changes => {
+                let visible: Vec<_> = repo
+                    .files
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, f)| f.status != "checked-out")
+                    .collect();
+                let selected = state.changes_selected.min(visible.len().saturating_sub(1));
+                file_state.select(Some(selected));
+                let items: Vec<ListItem> = visible
+                    .into_iter()
+                    .map(|(i, f)| {
+                        let prefix = if i == repo.selected_file { ">" } else { " " };
+                        let selected = if state.selected_files.iter().any(|p| p == &f.path) {
+                            "*"
+                        } else {
+                            " "
+                        };
+                        let kind = match f.status.as_str() {
+                            "extra" => "??",
+                            "edited" => "M",
+                            "added" => "A",
+                            "deleted" => "D",
+                            "missing" => "!",
+                            "conflict" => "C",
+                            _ => "✓",
+                        };
+                        let mut item =
+                            ListItem::new(format!("{}{} {} {}", prefix, selected, kind, f.path));
+                        if f.status == "edited" {
+                            item = item.style(Style::default().fg(Color::LightRed));
+                        } else if f.status == "missing" {
+                            item = item.style(Style::default().fg(Color::Red));
+                        }
+                        item
+                    })
+                    .collect();
+                List::new(items)
+                    .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
+                    .block(Block::default().borders(Borders::ALL).title("Changes"))
+            }
+            Tab::WorkingTree => {
                 file_state.select(Some(repo.selected_file));
                 let items: Vec<ListItem> = repo
                     .files
@@ -164,7 +206,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
 
     let right = if state.repo.is_some() {
         match state.tab {
-            Tab::WorkingTree => {
+            Tab::Changes | Tab::WorkingTree => {
                 let diff = state
                     .diff
                     .clone()
@@ -216,7 +258,9 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                     lines.push(Line::from(vec![
                         Span::styled("author ", Style::default().fg(Color::DarkGray)),
                         Span::raw(entry.user.clone()),
-                        Span::raw("  "),
+                    ]));
+                    lines.push(Line::from(vec![
+                        Span::styled("date ", Style::default().fg(Color::DarkGray)),
                         Span::styled(entry.date.clone(), Style::default().fg(Color::DarkGray)),
                     ]));
                     lines.push(Line::from(vec![
@@ -270,7 +314,9 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         lines.push(Line::from(vec![
                             Span::styled("author ", Style::default().fg(Color::DarkGray)),
                             Span::raw(entry.user.clone()),
-                            Span::raw("  "),
+                        ]));
+                        lines.push(Line::from(vec![
+                            Span::styled("date ", Style::default().fg(Color::DarkGray)),
                             Span::styled(entry.date.clone(), Style::default().fg(Color::DarkGray)),
                         ]));
                         lines.push(Line::from(vec![
@@ -306,7 +352,7 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
     };
     frame.render_stateful_widget(left, body[0], &mut file_state);
     match state.tab {
-        Tab::WorkingTree => state.files_scroll = file_state.offset(),
+        Tab::Changes | Tab::WorkingTree => state.files_scroll = file_state.offset(),
         Tab::FileHistory => state.history_scroll = file_state.offset(),
         Tab::Timeline => state.timeline_scroll = file_state.offset(),
     }
@@ -562,7 +608,7 @@ fn info_box_lines() -> Vec<Line<'static>> {
 
 fn right_pane_title(state: &AppState, fallback: &str) -> String {
     match state.tab {
-        Tab::WorkingTree => state
+        Tab::Changes | Tab::WorkingTree => state
             .repo
             .as_ref()
             .and_then(|repo| repo.files.get(repo.selected_file))
@@ -789,6 +835,7 @@ mod tests {
             show_hex: false,
             history_selected: 0,
             timeline_selected: 0,
+            changes_selected: 0,
             files_scroll: 0,
             history_scroll: 0,
             timeline_scroll: 0,
@@ -895,6 +942,7 @@ mod tests {
             show_hex: false,
             history_selected: 0,
             timeline_selected: 0,
+            changes_selected: 0,
             files_scroll: 0,
             history_scroll: 0,
             timeline_scroll: 0,
@@ -939,6 +987,7 @@ mod tests {
             show_hex: false,
             history_selected: 0,
             timeline_selected: 0,
+            changes_selected: 0,
             files_scroll: 0,
             history_scroll: 0,
             timeline_scroll: 0,

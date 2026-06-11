@@ -54,6 +54,7 @@ struct App {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
+    Changes,
     WorkingTree,
     FileHistory,
     Timeline,
@@ -78,6 +79,7 @@ pub struct AppState {
     pub show_hex: bool,
     pub history_selected: usize,
     pub timeline_selected: usize,
+    pub changes_selected: usize,
     pub files_scroll: usize,
     pub history_scroll: usize,
     pub timeline_scroll: usize,
@@ -108,7 +110,7 @@ impl App {
             client: FossilClient::new(debug_enabled),
             config: Config::load(),
             state: AppState {
-                tab: Tab::WorkingTree,
+                tab: Tab::Changes,
                 repo: None,
                 error: None,
                 diff: None,
@@ -126,6 +128,7 @@ impl App {
                 show_hex: false,
                 history_selected: 0,
                 timeline_selected: 0,
+                changes_selected: 0,
                 files_scroll: 0,
                 history_scroll: 0,
                 timeline_scroll: 0,
@@ -142,6 +145,7 @@ impl App {
                 self.state.diff_scroll = 0;
                 self.state.history_selected = 0;
                 self.state.timeline_selected = 0;
+                self.state.changes_selected = 0;
                 self.refresh_views();
                 self.refresh_timeline_details();
             }
@@ -151,6 +155,7 @@ impl App {
                 self.state.diff_scroll = 0;
                 self.state.history_selected = 0;
                 self.state.timeline_selected = 0;
+                self.state.changes_selected = 0;
                 self.state.history_diff = None;
                 self.state.history_path = None;
                 self.state.timeline_diff = None;
@@ -223,8 +228,11 @@ impl App {
                 self.refresh_timeline();
                 self.refresh_timeline_details();
             }
-            _ => {
+            Tab::FileHistory => {
                 self.refresh_history();
+                self.refresh_diff();
+            }
+            _ => {
                 self.refresh_diff();
             }
         }
@@ -683,31 +691,44 @@ impl App {
     }
 
     fn select_prev(&mut self) {
-        if let Some(repo) = &mut self.state.repo {
-            match self.state.tab {
-                Tab::Timeline => {
-                    if self.state.timeline_selected > 0 {
-                        self.state.timeline_selected -= 1;
-                    }
-                    self.sync_timeline_scroll();
-                    self.refresh_timeline();
-                    self.refresh_timeline_details();
+        match self.state.tab {
+            Tab::Timeline => {
+                if self.state.timeline_selected > 0 {
+                    self.state.timeline_selected -= 1;
                 }
-                Tab::FileHistory => {
-                    if self.state.history_selected > 0 {
-                        self.state.history_selected -= 1;
-                    }
-                    self.sync_history_scroll();
-                    self.refresh_history();
-                    self.refresh_history_details();
+                self.sync_timeline_scroll();
+                self.refresh_timeline();
+                self.refresh_timeline_details();
+            }
+            Tab::FileHistory => {
+                if self.state.history_selected > 0 {
+                    self.state.history_selected -= 1;
                 }
-                _ => {
+                self.sync_history_scroll();
+                self.refresh_history();
+                self.refresh_history_details();
+            }
+            Tab::Changes => {
+                let visible = self.change_file_indices();
+                if self.state.changes_selected > 0 {
+                    self.state.changes_selected -= 1;
+                }
+                if let Some(repo) = &mut self.state.repo {
+                    if let Some(idx) = visible.get(self.state.changes_selected).copied() {
+                        repo.selected_file = idx;
+                    }
+                }
+                self.center_changes_scroll();
+                self.refresh_views();
+            }
+            _ => {
+                if let Some(repo) = &mut self.state.repo {
                     if repo.selected_file > 0 {
                         repo.selected_file -= 1;
                     }
-                    self.sync_files_scroll();
-                    self.refresh_views();
                 }
+                self.sync_files_scroll();
+                self.refresh_views();
             }
         }
     }
@@ -720,31 +741,44 @@ impl App {
     }
 
     fn select_next(&mut self) {
-        if let Some(repo) = &mut self.state.repo {
-            match self.state.tab {
-                Tab::Timeline => {
-                    if self.state.timeline_selected + 1 < repo.timeline.len() {
-                        self.state.timeline_selected += 1;
-                    }
-                    self.sync_timeline_scroll();
-                    self.refresh_timeline();
-                    self.refresh_timeline_details();
+        match self.state.tab {
+            Tab::Timeline => {
+                if self.state.timeline_selected + 1 < self.state.repo.as_ref().map(|r| r.timeline.len()).unwrap_or(0) {
+                    self.state.timeline_selected += 1;
                 }
-                Tab::FileHistory => {
-                    if self.state.history_selected + 1 < self.state.history.len() {
-                        self.state.history_selected += 1;
-                    }
-                    self.sync_history_scroll();
-                    self.refresh_history();
-                    self.refresh_history_details();
+                self.sync_timeline_scroll();
+                self.refresh_timeline();
+                self.refresh_timeline_details();
+            }
+            Tab::FileHistory => {
+                if self.state.history_selected + 1 < self.state.history.len() {
+                    self.state.history_selected += 1;
                 }
-                _ => {
+                self.sync_history_scroll();
+                self.refresh_history();
+                self.refresh_history_details();
+            }
+            Tab::Changes => {
+                let visible = self.change_file_indices();
+                if self.state.changes_selected + 1 < visible.len() {
+                    self.state.changes_selected += 1;
+                }
+                if let Some(repo) = &mut self.state.repo {
+                    if let Some(idx) = visible.get(self.state.changes_selected).copied() {
+                        repo.selected_file = idx;
+                    }
+                }
+                self.center_changes_scroll();
+                self.refresh_views();
+            }
+            _ => {
+                if let Some(repo) = &mut self.state.repo {
                     if repo.selected_file + 1 < repo.files.len() {
                         repo.selected_file += 1;
                     }
-                    self.sync_files_scroll();
-                    self.refresh_views();
                 }
+                self.sync_files_scroll();
+                self.refresh_views();
             }
         }
     }
@@ -755,6 +789,50 @@ impl App {
                 .state
                 .files_scroll
                 .min(repo.files.len().saturating_sub(1));
+        }
+    }
+
+    fn center_changes_scroll(&mut self) {
+        let visible_len = self.change_file_indices().len();
+        if visible_len == 0 {
+            self.state.files_scroll = 0;
+            return;
+        }
+        let selected = self.state.changes_selected.min(visible_len - 1);
+        let half = 5usize;
+        self.state.files_scroll = selected.saturating_sub(half);
+    }
+
+    fn change_file_indices(&self) -> Vec<usize> {
+        self.state
+            .repo
+            .as_ref()
+            .map(|repo| {
+                repo.files
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, f)| f.status != "checked-out")
+                    .map(|(i, _)| i)
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    fn selected_file_path(&self) -> Option<String> {
+        self.state
+            .repo
+            .as_ref()?
+            .files
+            .get(self.state.repo.as_ref()?.selected_file)
+            .map(|f| f.path.clone())
+    }
+
+    fn select_file_by_path(&mut self, path: &str) {
+        if let Some(repo) = &mut self.state.repo {
+            if let Some(idx) = repo.files.iter().position(|f| f.path == path) {
+                repo.selected_file = idx;
+                self.sync_files_scroll();
+            }
         }
     }
 
@@ -862,15 +940,24 @@ impl App {
                                 self.refresh_views();
                             }
                             KeyCode::Tab => {
+                                let prev_path = self.selected_file_path();
                                 self.state.tab = match self.state.tab {
+                                    Tab::Changes => Tab::WorkingTree,
                                     Tab::WorkingTree => Tab::FileHistory,
                                     Tab::FileHistory => Tab::Timeline,
-                                    Tab::Timeline => Tab::WorkingTree,
+                                    Tab::Timeline => Tab::Changes,
                                 };
+                                if matches!(self.state.tab, Tab::WorkingTree) {
+                                    if let Some(path) = prev_path.as_deref() {
+                                        self.select_file_by_path(path);
+                                    }
+                                } else if matches!(self.state.tab, Tab::Changes) {
+                                    self.center_changes_scroll();
+                                }
                                 match self.state.tab {
                                     Tab::Timeline => self.refresh_timeline(),
                                     Tab::FileHistory => self.refresh_history(),
-                                    _ => self.refresh_history(),
+                                    Tab::WorkingTree | Tab::Changes => self.refresh_diff(),
                                 }
                                 if matches!(self.state.tab, Tab::FileHistory) {
                                     self.refresh_history_details();
