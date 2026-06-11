@@ -9,6 +9,7 @@ use std::process::Command;
 pub struct RepoState {
     pub files: Vec<FileStatus>,
     pub timeline: Vec<TimelineEntry>,
+    pub branches: Vec<String>,
     pub selected_file: usize,
 }
 
@@ -68,6 +69,7 @@ impl FossilClient {
         let tracked = self.run(&["ls"])?;
         let extras = self.run(&["extras", "--dotfiles"]).unwrap_or_default();
         let timeline = self.history_timeline(None).unwrap_or_default();
+        let branches = self.branch_list().unwrap_or_default();
         Ok(RepoState {
             files: merge_files(
                 parse_tracked(&tracked),
@@ -75,6 +77,7 @@ impl FossilClient {
                 parse_extra(&extras),
             ),
             timeline,
+            branches,
             selected_file: 0,
         })
     }
@@ -99,12 +102,17 @@ impl FossilClient {
         self.run(&["sync"])
     }
 
+    pub fn branch_list(&self) -> std::result::Result<Vec<String>, FossilError> {
+        let output = self.run(&["branch", "list"])?;
+        Ok(parse_branch_list(&output))
+    }
+
     pub fn history_timeline(
         &self,
         path: Option<&str>,
     ) -> std::result::Result<Vec<TimelineEntry>, FossilError> {
         let mut args: Vec<String> =
-            vec!["timeline", "-n", "50", "-t", "ci", "-F", "%h|%a|%d|%c|%t"]
+            vec!["timeline", "-n", "100", "-t", "ci", "-F", "%h|%a|%d|%c|%t"]
                 .into_iter()
                 .map(|s| s.to_string())
                 .collect();
@@ -365,6 +373,19 @@ fn merge_files(
     tracked
 }
 
+fn parse_branch_list(out: &str) -> Vec<String> {
+    out.lines()
+        .filter_map(|line| {
+            let s = line.trim();
+            if s.is_empty() {
+                return None;
+            }
+            let s = s.strip_prefix('*').map_or(s, |rest| rest.trim());
+            s.split_whitespace().last().map(|name| name.to_string())
+        })
+        .collect()
+}
+
 fn parse_timeline(out: &str) -> Vec<TimelineEntry> {
     out.lines()
         .filter_map(|line| {
@@ -436,6 +457,7 @@ mod tests {
         assert_eq!(entries[0].date, "2026-06-04 10:00");
         assert_eq!(entries[0].message, "Fix bug");
         assert_eq!(entries[0].tags, "sym-v0.7.1");
+        assert_eq!(entries[1].tags, "trunk");
     }
 
     #[test]

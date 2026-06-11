@@ -80,10 +80,11 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         };
                         let mut spans = Vec::new();
                         spans.push(Span::raw(format!("{}{}", prefix, t.rid)));
-                        if !t.tags.is_empty() {
+                        let tags = display_timeline_tags(&t.tags, &repo.branches);
+                        if !tags.is_empty() {
                             spans.push(Span::raw(" "));
                             spans.push(Span::styled(
-                                format!("[{}]", t.tags),
+                                format!("[{}]", tags),
                                 Style::default().fg(Color::Cyan),
                             ));
                         }
@@ -117,10 +118,11 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                             };
                             let mut spans = Vec::new();
                             spans.push(Span::raw(format!("{}{}", prefix, t.rid)));
-                            if !t.tags.is_empty() {
+                            let tags = display_timeline_tags(&t.tags, &repo.branches);
+                            if !tags.is_empty() {
                                 spans.push(Span::raw(" "));
                                 spans.push(Span::styled(
-                                    format!("[{}]", t.tags),
+                                    format!("[{}]", tags),
                                     Style::default().fg(Color::Cyan),
                                 ));
                             }
@@ -294,12 +296,12 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                         Span::styled("commit ", Style::default().fg(Color::DarkGray)),
                         Span::styled(entry.rid.clone(), Style::default().fg(Color::Yellow)),
                     ];
-                    if !entry.tags.is_empty() {
-                        commit_line.push(Span::raw(" "));
-                        commit_line.push(Span::styled(
-                            entry.tags.clone(),
-                            Style::default().fg(Color::Cyan),
-                        ));
+                    if let Some(repo) = &state.repo {
+                        let tags = display_timeline_tags(&entry.tags, &repo.branches);
+                        if !tags.is_empty() {
+                            commit_line.push(Span::raw(" "));
+                            commit_line.push(Span::styled(tags, Style::default().fg(Color::Cyan)));
+                        }
                     }
                     lines.push(Line::from(commit_line));
                     lines.push(Line::from(vec![
@@ -354,12 +356,10 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
                             Span::styled("commit ", Style::default().fg(Color::DarkGray)),
                             Span::styled(entry.rid.clone(), Style::default().fg(Color::Yellow)),
                         ];
-                        if !entry.tags.is_empty() {
+                        let tags = display_timeline_tags(&entry.tags, &repo.branches);
+                        if !tags.is_empty() {
                             commit_line.push(Span::raw(" "));
-                            commit_line.push(Span::styled(
-                                entry.tags.clone(),
-                                Style::default().fg(Color::Cyan),
-                            ));
+                            commit_line.push(Span::styled(tags, Style::default().fg(Color::Cyan)));
                         }
                         lines.push(Line::from(commit_line));
                         lines.push(Line::from(vec![
@@ -656,6 +656,15 @@ fn info_box_lines() -> Vec<Line<'static>> {
             Style::default().fg(Color::DarkGray),
         )]),
     ]
+}
+
+fn display_timeline_tags(tags: &str, branches: &[String]) -> String {
+    tags.split(',')
+        .map(|tag| tag.trim())
+        .filter(|tag| !tag.is_empty())
+        .filter(|tag| !branches.iter().any(|branch| branch == tag))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn file_state_symbol(status: &str) -> &'static str {
@@ -969,6 +978,7 @@ mod tests {
                         status: "extra".to_string(),
                     },
                 ],
+                branches: vec!["sym-v0.7.3".to_string()],
                 timeline: vec![crate::fossil::TimelineEntry {
                     rid: "abc123".to_string(),
                     user: "Alice".to_string(),

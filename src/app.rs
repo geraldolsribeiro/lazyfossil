@@ -1144,6 +1144,7 @@ mod tests {
                 },
             ],
             timeline: vec![],
+            branches: vec![],
             selected_file: 0,
         }
     }
@@ -1266,6 +1267,7 @@ mod tests {
                 status: "checked-out".into(),
             }],
             timeline: vec![],
+            branches: vec![],
             selected_file: 0,
         });
         app.state.tab = Tab::Changes;
