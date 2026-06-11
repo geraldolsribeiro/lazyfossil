@@ -70,6 +70,8 @@ There are mirror repositories at
 
 lazyfossil’s main screen is built around four views (Changes, Working tree, File history, and Timeline):
 
+![Changes demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/changes.gif)
+
 ![working tree demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/working_tree.gif)
 
 ![File history demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/file_history.gif)

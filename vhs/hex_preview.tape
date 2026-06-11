@@ -3,7 +3,10 @@ Source terminal_config.tape
 Type "lazyfossil"
 Enter
 Sleep 1s
-Down 20
+
+Tab
+
+Down@300ms 20
 Sleep 1s
 
 # Activate the hex mode

@@ -639,6 +639,7 @@ fn right_pane_title(state: &AppState, fallback: &str) -> String {
                     "deleted" => "Deleted",
                     "missing" => "Missing",
                     "conflict" => "Conflict",
+                    _ if state.show_hex => "Hexdump",
                     _ => "Preview",
                 };
                 format!("{}: {}", title, file.path)

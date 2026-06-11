@@ -36,6 +36,9 @@ Sleep 1s
 Enter
 Sleep 2s
 
+Tab
+Sleep 1s
+
 # Select the file
 Space
 Sleep 2s
