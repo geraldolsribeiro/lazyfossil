@@ -1,5 +1,6 @@
 # Summary
 
+- [Map](./map.md)
 - [Getting started](./intro.md)
 - [Installation](./installation.md)
 - [Keybindings](./keybindings.md)

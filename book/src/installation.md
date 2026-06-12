@@ -1,6 +1,6 @@
 # Installation
 
-## From crates.io
+## From source
 
 This is the preferred way to install and update **lazyfossil**.
 
@@ -8,10 +8,11 @@ This is the preferred way to install and update **lazyfossil**.
 cargo install lazyfossil
 ```
 
-![install via cargo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/install_via_cargo.gif)
+![cargo install lazyfossil](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/install_via_cargo.gif)
 
-Follow instructions in <https://rust-lang.org/tools/install/> to install
-**rust**.
+{{#include lf.md:begin-field-note}}
+Follow the instructions at <https://rust-lang.org/tools/install/> to install **Rust**.
+{{#include lf.md:end-field-note}}
 
 ## Pre-built binaries
 
@@ -27,6 +28,6 @@ The lazyfossil [source
 code](https://chiselapp.com/user/geraldo/repository/lazyfossil/) is distributed under MIT license, and is maintained
 via [Fossil SCM](https://fossil-scm.org/).
 
-There are mirror repositories at 
+Mirror repositories are available at
 [GitHub](https://github.com/geraldolsribeiro/lazyfossil) and
 [crates.io](https://crates.io/crates/lazyfossil).

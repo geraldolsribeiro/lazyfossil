@@ -2,7 +2,7 @@
 
 The **Working tree** tab shows all tracked files and extras in the checkout.
 
-It is the main browsing view for file status, previews, and actions.
+It is the main view for file status, previews, and actions.
 
 ![working tree demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/working_tree.gif)
 

@@ -1,4 +1,6 @@
-# Getting started
+# LazyFossil Field Guide
+
+<div align="center">
 
 [![Crates.io](https://img.shields.io/crates/v/lazyfossil)](https://crates.io/crates/lazyfossil)
 [![Multiplatform Release](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml/badge.svg)](https://github.com/geraldolsribeiro/lazyfossil/actions/workflows/release.yml)
@@ -6,21 +8,20 @@
 [![GitHub stars](https://img.shields.io/github/stars/geraldolsribeiro/lazyfossil)](https://github.com/geraldolsribeiro/lazyfossil/stargazers)
 ![Crates.io Total Downloads](https://img.shields.io/crates/d/lazyfossil)
 
-![lazyfossil logo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/lazyfossil_logo.png)
+![lazyfossil logo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/lazyfossil_logo_paper.png)
+
+</div>
 
 **lazyfossil** helps you work with **Fossil SCM** from the terminal in a simpler way:
 browse files, see history, preview changes, and commit or sync without extra friction.
 
-* <https://lazyfossil.org>
-* <https://chiselapp.com/user/geraldo/repository/lazyfossil/>
-* <https://github.com/geraldolsribeiro/lazyfossil>
-* <https://crates.io/crates/lazyfossil>
+![layout](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/layout_infographic.png)
 
 ## Quick start
 
-1. Install it with `cargo install lazyfossil`
-2. Go to your project checkout
+1. Install: `cargo install lazyfossil`
+2. Open your project checkout
 3. Type `lazyfossil`
-4. Browse changes and history
+4. Browse changes, history, and timeline
 5. Press `q` to quit
 

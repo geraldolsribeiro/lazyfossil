@@ -4,7 +4,7 @@
 
 See the [Keybindings](./keybindings.md) chapter for the current navigation and action keys.
 
-lazyfossil’s main screen is built around four views (Changes, Working tree, File history, and Timeline):
+lazyfossil’s main screen is built around four views: Changes, Working tree, File history, and Timeline.
 
 ## Changes
 
@@ -21,7 +21,7 @@ Use it to:
 
 ## Working tree
 
-This is the default view.
+This is the default view for browsing files.
 
 Use it to:
 

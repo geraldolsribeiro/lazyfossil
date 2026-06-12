@@ -1,4 +1,16 @@
 [book]
-title = "lazyfossil user guide"
+title = "LazyFossil Field Guide"
 authors = ["Geraldo Ribeiro"]
 language = "en"
+
+[output.html]
+default-theme = "lazyfossil"
+preferred-dark-theme = "lazyfossil"
+additional-css = ["theme/css/lazyfossil.css"]
+additional-js = ["theme/js/lazyfossil.js"]
+git-repository-url = "https://chiselapp.com/user/geraldo/repository/lazyfossil/"
+site-url = "https://lazyfossil.org"
+
+[output.html.fold]
+enable = true
+level = 1

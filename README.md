@@ -29,7 +29,7 @@ browse files, see history, preview changes, and commit or sync without extra fri
 ## Quick start
 
 1. Install it with `cargo install lazyfossil`
-2. Go to your project checkout
+2. Open your project checkout
 3. Type `lazyfossil`
 4. Browse changes and history
 5. Press `q` to quit
@@ -58,10 +58,10 @@ Download pre-built binaries from the latest [GitHub releases](https://github.com
 ## Source code
 
 The lazyfossil [source
-code](https://chiselapp.com/user/geraldo/repository/lazyfossil/) is distributed under MIT license, and is maintained
+code](https://chiselapp.com/user/geraldo/repository/lazyfossil/) is distributed under the MIT license and is maintained
 via [Fossil SCM](https://fossil-scm.org/).
 
-There are mirror repositories at 
+Mirror repositories are available at
 [GitHub](https://github.com/geraldolsribeiro/lazyfossil) and
 [crates.io](https://crates.io/crates/lazyfossil).
 
@@ -69,7 +69,7 @@ There are mirror repositories at
 
 **lazyfossil** is still in alpha, but it is already useful for everyday Fossil work. This project uses lazyfossil itself while we continue refining it, so the screenshots and demos reflect real use rather than a polished finish. If you work with Fossil from the terminal, try it and see whether it fits your workflow.
 
-lazyfossil’s main screen is built around four views (Changes, Working tree, File history, and Timeline):
+lazyfossil’s main screen is built around four views: Changes, Working tree, File history, and Timeline.
 
 ![Changes demo](https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/changes.gif)
 
@@ -149,13 +149,13 @@ Current version: `0.8.1`.
 ## Credits
 
 ### [fossil-scm.org](https://fossil-scm.org/)
-The Fossil SCM project is the version control system lazyfossil is built around.
+The Fossil SCM project is the version control system that lazyfossil is built around.
 
 ### [pi.dev](https://pi.dev)
 Pi provides the agent harness used to develop and refine this project. Its tooling made it easier to iterate quickly, validate changes, and improve the TUI with confidence.
 
 ### [crates.io/crates/lazyfossil](https://crates.io/crates/lazyfossil)
-The crates.io is the distribution channel for the Rust application, helping make lazyfossil available to the broader Rust ecosystem and simplifying installation and release management.
+crates.io is the distribution channel for the Rust application, helping make lazyfossil available to the broader Rust ecosystem and simplifying installation and release management.
 
 ### [emojicombos.com/lazyfossil](https://emojicombos.com/lazyfossil)
 This source provided the project logo artwork used in the README and assets, giving lazyfossil a recognizable visual identity.

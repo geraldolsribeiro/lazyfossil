@@ -1,0 +1,268 @@
+@import url("https://fonts.googleapis.com/css2?family=Averia+Sans+Libre:wght@400;700&family=Patrick+Hand&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap");
+
+:root {
+  --lf-paper: #faf4e5;
+  --lf-ink: #253047;
+  --lf-muted: #5f6780;
+  --lf-terminal: #11131d;
+  --lf-terminal-border: #727991;
+  --lf-green: #71b85b;
+  --lf-blue: #7898e8;
+  --lf-yellow: #f1c45f;
+  --lf-pink: #e7799b;
+  --lf-note: #fff4c8;
+  --lf-blue-pen: #0c34b1;
+
+  --lf-font-title: "Averia Sans Libre", system-ui, sans-serif;
+  --lf-font-note: "Patrick Hand", cursive;
+  --lf-font-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --lf-font-code: "JetBrains Mono", monospace;
+  --lf-mascot-idea: url("https://pub-0503d20ece60405d98e4a2fa8b21779d.r2.dev/idea.svg");
+}
+
+html,
+body,
+.content,
+#content {
+  background: var(--lf-paper) !important;
+  font-family: var(--lf-font-body);
+  color: var(--lf-ink);
+}
+
+.lf-irregular-border {
+  border: 3px solid var(--lf-blue-pen);
+
+  /* Creates wobbly, irregular corners */
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--lf-ink);
+  letter-spacing: 0.01em;
+}
+
+h1::after {
+  content: "";
+  display: block;
+  width: 9rem;
+  height: 0.35rem;
+  margin-top: 0.25rem;
+  background: var(--lf-green);
+  border-radius: 999px;
+  transform: rotate(-1deg);
+}
+
+code,
+pre {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+pre {
+  background: var(--lf-terminal) !important;
+  border: 3px solid var(--lf-blue-pen);
+  /* Creates wobbly, irregular corners */
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+
+.content {
+  font-family: var(--lf-font-body);
+  line-height: 1.65;
+}
+
+.content h1,
+.content h2,
+.content h3,
+.content h4 {
+  font-family: var(--lf-font-title);
+  letter-spacing: 0.02em;
+}
+
+.lf-note {
+  margin: 1.2rem 0;
+  padding: 1rem 1.2rem;
+  background: var(--lf-note);
+  border: 2px solid var(--lf-ink);
+  border-radius: 10px;
+  box-shadow: 5px 5px 0 rgba(37, 48, 71, 0.15);
+  transform: rotate(-0.3deg);
+}
+
+.lf-note-tip {
+  border-left: 0.65rem solid var(--lf-green);
+}
+
+.lf-guide {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.48);
+  border: 2px dashed rgba(37, 48, 71, 0.35);
+  border-radius: 16px;
+}
+
+.lf-head {
+  width: 72px;
+  height: 58px;
+  position: relative;
+  border: 4px solid var(--lf-ink);
+  border-radius: 56% 48% 45% 38%;
+  background: #fffdf8;
+}
+.lf-head::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  bottom: 10px;
+  width: 32px;
+  height: 24px;
+  border: 4px solid var(--lf-ink);
+  border-right: 0;
+  border-radius: 60% 0 0 60%;
+  background: #fffdf8;
+}
+.lf-head::after {
+  content: "";
+  position: absolute;
+  left: 21px;
+  top: 24px;
+  width: 18px;
+  height: 10px;
+  border-bottom: 4px solid var(--lf-ink);
+  border-radius: 0 0 18px 18px;
+}
+
+.lf-poster {
+  position: relative;
+  margin: 2rem 0;
+  padding: 2rem;
+  background: #fbf4e6;
+  border-radius: 24px;
+  border: 2px solid rgba(37, 48, 71, 0.18);
+}
+
+.lf-terminal {
+  background: var(--lf-terminal);
+  color: #d9def7;
+  border: 3px solid var(--lf-ink);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(37, 48, 71, 0.25);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.lf-header,
+.lf-footer {
+  padding: 0.8rem 1rem;
+  border-color: var(--lf-terminal-border);
+}
+
+.lf-header {
+  border-bottom: 1px solid var(--lf-terminal-border);
+}
+
+.lf-header b {
+  color: var(--lf-yellow);
+}
+
+.lf-footer {
+  border-top: 1px solid var(--lf-terminal-border);
+  color: #cbd2ee;
+}
+
+.lf-main {
+  display: grid;
+  grid-template-columns: 1fr 1.55fr;
+  min-height: 260px;
+}
+
+.lf-left,
+.lf-right {
+  padding: 1rem;
+}
+
+.lf-left {
+  border-right: 1px solid var(--lf-terminal-border);
+  color: #9fbcff;
+}
+
+.lf-right {
+  color: #b8f0ca;
+}
+
+.lf-callout {
+  position: absolute;
+  max-width: 15rem;
+  padding: 0.85rem 1rem;
+  background: #fff7ce;
+  border: 2px solid var(--lf-ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 rgba(37, 48, 71, 0.16);
+  font-weight: 700;
+}
+
+.lf-callout.left {
+  left: 1rem;
+  top: 0;
+  transform: rotate(-2deg);
+}
+
+.lf-callout.right {
+  right: 1rem;
+  bottom: 0.5rem;
+  transform: rotate(2deg);
+}
+
+.lf-mascot-peek {
+  position: absolute;
+  right: 2.5rem;
+  top: 0.5rem;
+  font-size: 1.8rem;
+  color: var(--lf-ink);
+}
+
+.lf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.lf-card {
+  background: rgba(255, 255, 255, 0.55);
+  border: 2px solid rgba(37, 48, 71, 0.35);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.lf-field-note {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+
+  background: var(--lf-fill-paper);
+
+  /* border: 3px solid var(--lf-blue-pen); */
+
+  /* Creates wobbly, irregular corners */
+  /* border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; */
+}
+
+.lf-field-note::before {
+  content: "";
+  flex: 0 0 auto;
+
+  width: 72px;
+  height: 72px;
+
+  background-image: var(--lf-mascot-idea);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
