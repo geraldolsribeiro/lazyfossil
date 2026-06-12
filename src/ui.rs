@@ -2,7 +2,10 @@ use crate::app::{AppState, CommitTarget, PreviewKind, Tab};
 use ratatui::prelude::*;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap};
+use ratatui::widgets::{
+    Block, Borders, Clear, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation,
+    ScrollbarState, Tabs, Wrap,
+};
 
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 fn utf8_state_symbols() -> bool {
@@ -402,13 +405,38 @@ pub fn draw(frame: &mut Frame, state: &mut AppState) {
         )
         .block(Block::default().borders(Borders::ALL).title("Status"))
     };
+    let right_area = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(0), Constraint::Length(1)])
+        .split(body[1]);
+
     frame.render_stateful_widget(left, body[0], &mut file_state);
     match state.tab {
         Tab::Changes | Tab::WorkingTree => state.files_scroll = file_state.offset(),
         Tab::FileHistory => state.history_scroll = file_state.offset(),
         Tab::Timeline => state.timeline_scroll = file_state.offset(),
     }
-    frame.render_widget(right, body[1]);
+    let max_scroll = right_content_lines(state)
+        .saturating_sub(right_area[0].height.saturating_sub(2) as usize)
+        as u16;
+    if state.diff_scroll > max_scroll {
+        state.diff_scroll = max_scroll;
+    }
+    frame.render_widget(right, right_area[0]);
+    if state.repo.is_some() {
+        let content_length = right_content_lines(state);
+        let viewport = right_area[0].height.saturating_sub(2) as usize;
+        if content_length > viewport && right_area[1].width > 0 {
+            let mut scrollbar_state = ScrollbarState::new(content_length)
+                .position((state.diff_scroll as usize).min(content_length.saturating_sub(1)))
+                .viewport_content_length(viewport);
+            frame.render_stateful_widget(
+                Scrollbar::new(ScrollbarOrientation::VerticalRight),
+                right_area[1],
+                &mut scrollbar_state,
+            );
+        }
+    }
 
     let footer = if let Some(msg) = &state.commit_prompt {
         let target = match state.commit_target {
@@ -665,6 +693,48 @@ fn display_timeline_tags(tags: &str, branches: &[String]) -> String {
         .filter(|tag| !branches.iter().any(|branch| branch == tag))
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+fn right_content_lines(state: &AppState) -> usize {
+    match state.tab {
+        Tab::Changes | Tab::WorkingTree => state
+            .diff
+            .as_ref()
+            .map(|d| d.lines().count().max(1))
+            .unwrap_or(1),
+        Tab::FileHistory => {
+            let mut lines = 0usize;
+            if state.repo.is_some() {
+                lines += 3;
+            }
+            if state.history.get(state.history_selected).is_some() {
+                lines += 6;
+            }
+            lines
+                + state
+                    .history_diff
+                    .as_ref()
+                    .map(|d| d.lines().count())
+                    .unwrap_or(1)
+        }
+        Tab::Timeline => {
+            let mut lines = 2usize;
+            if state
+                .repo
+                .as_ref()
+                .and_then(|r| r.timeline.get(state.timeline_selected))
+                .is_some()
+            {
+                lines += 6;
+            }
+            lines
+                + state
+                    .timeline_diff
+                    .as_ref()
+                    .map(|d| d.lines().count())
+                    .unwrap_or(1)
+        }
+    }
 }
 
 fn file_state_symbol(status: &str) -> &'static str {
