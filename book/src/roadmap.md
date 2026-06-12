@@ -2,7 +2,16 @@
 
 ## Roadmap
 
-### Now
+### Done
+- Changes, working tree, file history, and timeline views
+- Temporary selection-based commit flow
+- Inline commit message prompt
+- Ignore-file support
+- Sync support
+- Binary preview fallback
+- XDG config file support
+- Book documentation for the main views and config
+- VHS demo tapes for the main flows
 - UI polish
   - preview styling per file type
   - spacing and layout tweaks
@@ -17,8 +26,6 @@
   - rename detection improvements
   - conflict state polish
   - clearer warnings and errors
-
-### Next
 - Quality and tests
   - status parsing tests
   - preview rendering tests
@@ -29,17 +36,13 @@
   - better mouse selection
   - improved pane focus behavior
   - edge-case fixes in selection
+- Follow-up refinements
+  - workflow tweaks discovered during use
+  - small command/help improvements
+  - docs updates as features change
 
-### Done
-- Changes, working tree, file history, and timeline views
-- Temporary selection-based commit flow
-- Inline commit message prompt
-- Ignore-file support
-- Sync support
-- Binary preview fallback
-- XDG config file support
-- Book documentation for the main views and config
-- VHS demo tapes for the main flows
+### Next
+- None
 - Follow-up refinements
   - workflow tweaks discovered during use
   - small command/help improvements

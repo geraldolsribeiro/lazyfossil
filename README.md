@@ -98,15 +98,6 @@ lazyfossil’s main screen is built around four views (Changes, Working tree, Fi
 
 ## Roadmap
 
-### Now
-- UI polish and layout tweaks
-- Better file history and timeline details
-- Status and recovery UX
-
-### Next
-- Quality and tests
-- Navigation and mouse
-
 ### Done
 - Changes, working tree, file history, and timeline views
 - Temporary selection-based commit flow
@@ -117,6 +108,18 @@ lazyfossil’s main screen is built around four views (Changes, Working tree, Fi
 - XDG config file support
 - Book documentation for the main views and config
 - VHS demo tapes for the main flows
+- UI polish and layout tweaks
+- Better file history and timeline details
+- Status and recovery UX
+- Quality and tests
+- Navigation and mouse
+- Follow-up refinements
+  - workflow tweaks discovered during use
+  - small command/help improvements
+  - docs updates as features change
+
+### Next
+- None
 
 ### Done
 - Working tree, file history, and timeline views
