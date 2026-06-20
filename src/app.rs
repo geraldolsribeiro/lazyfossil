@@ -245,6 +245,11 @@ impl App {
     }
 
     fn refresh_diff(&mut self) {
+        if matches!(self.state.tab, Tab::Changes) && self.change_file_indices().is_empty() {
+            self.state.preview_kind = PreviewKind::Notice;
+            self.state.diff = Some("No changes detected.".to_string());
+            return;
+        }
         if let Some(repo) = &self.state.repo {
             if let Some(file) = repo.files.get(repo.selected_file) {
                 self.state.diff_scroll = 0;
@@ -318,7 +323,7 @@ impl App {
                 });
             } else {
                 self.state.preview_kind = PreviewKind::Notice;
-                self.state.diff = Some("No changes detected. Everything is clear.".to_string());
+                self.state.diff = Some("No changes detected.".to_string());
             }
         }
     }
@@ -1274,8 +1279,10 @@ mod tests {
         });
         app.state.tab = Tab::Changes;
         app.sync_changes_selection();
+        app.refresh_diff();
         assert_eq!(app.state.changes_selected, 0);
         assert_eq!(app.change_file_indices().len(), 0);
+        assert_eq!(app.state.diff.as_deref(), Some("No changes detected."));
     }
 
     #[test]
@@ -1310,11 +1317,9 @@ mod tests {
             branches: vec![],
             selected_file: 0,
         });
+        app.state.tab = Tab::Changes;
         app.refresh_diff();
-        assert_eq!(
-            app.state.diff.as_deref(),
-            Some("No changes detected. Everything is clear.")
-        );
+        assert_eq!(app.state.diff.as_deref(), Some("No changes detected."));
         assert_eq!(app.state.preview_kind, PreviewKind::Notice);
     }
 

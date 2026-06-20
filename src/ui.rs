@@ -750,7 +750,7 @@ fn file_state_symbol(status: &str) -> &'static str {
         }
     } else {
         match status {
-            "extra" => "??",
+            "extra" => "?",
             "edited" => "M",
             "added" => "A",
             "deleted" => "D",
@@ -763,24 +763,35 @@ fn file_state_symbol(status: &str) -> &'static str {
 
 fn right_pane_title(state: &AppState, fallback: &str) -> String {
     match state.tab {
-        Tab::Changes | Tab::WorkingTree => state
-            .repo
-            .as_ref()
-            .and_then(|repo| repo.files.get(repo.selected_file))
-            .map(|file| {
-                let title = match file.status.as_str() {
-                    "edited" => "Diff",
-                    "extra" => "Extra",
-                    "added" => "Added",
-                    "deleted" => "Deleted",
-                    "missing" => "Missing",
-                    "conflict" => "Conflict",
-                    _ if state.show_hex => "Hexdump",
-                    _ => "Preview",
-                };
-                format!("{}: {}", title, file.path)
-            })
-            .unwrap_or_else(|| fallback.to_string()),
+        Tab::Changes | Tab::WorkingTree => {
+            if matches!(state.tab, Tab::Changes)
+                && state
+                    .repo
+                    .as_ref()
+                    .map(|repo| repo.files.iter().all(|f| f.status == "checked-out"))
+                    .unwrap_or(false)
+            {
+                return "Everything is clear".to_string();
+            }
+            state
+                .repo
+                .as_ref()
+                .and_then(|repo| repo.files.get(repo.selected_file))
+                .map(|file| {
+                    let title = match file.status.as_str() {
+                        "edited" => "Diff",
+                        "extra" => "Extra",
+                        "added" => "Added",
+                        "deleted" => "Deleted",
+                        "missing" => "Missing",
+                        "conflict" => "Conflict",
+                        _ if state.show_hex => "Hexdump",
+                        _ => "Preview",
+                    };
+                    format!("{}: {}", title, file.path)
+                })
+                .unwrap_or_else(|| fallback.to_string())
+        }
         Tab::FileHistory => state
             .repo
             .as_ref()
@@ -1090,6 +1101,44 @@ mod tests {
             right_pane_title(&state, "Timeline details"),
             "Timeline details: abc123"
         );
+    }
+
+    #[test]
+    fn right_pane_title_shows_no_changes_when_changes_list_empty() {
+        let state = AppState {
+            tab: Tab::Changes,
+            repo: Some(crate::fossil::RepoState {
+                files: vec![crate::fossil::FileStatus {
+                    path: "notes.txt".to_string(),
+                    status: "checked-out".to_string(),
+                }],
+                branches: vec![],
+                timeline: vec![],
+                selected_file: 0,
+            }),
+            error: None,
+            diff: Some("No changes detected.".to_string()),
+            diff_scroll: 0,
+            selected_files: vec![],
+            commit_prompt: None,
+            commit_target: CommitTarget::Selected,
+            ignore_prompt: None,
+            discard_prompt: None,
+            history: vec![],
+            history_diff: None,
+            history_path: None,
+            timeline_diff: None,
+            redraw: false,
+            show_hex: false,
+            history_selected: 0,
+            timeline_selected: 0,
+            changes_selected: 0,
+            files_scroll: 0,
+            history_scroll: 0,
+            timeline_scroll: 0,
+            preview_kind: PreviewKind::Notice,
+        };
+        assert_eq!(right_pane_title(&state, "Diff"), "Everything is clear");
     }
 
     #[test]
