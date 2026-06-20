@@ -9,6 +9,7 @@
 - [pi.dev](https://pi.dev) — agent harness used to develop and refine the project
 - [crates.io/crates/lazyfossil](https://crates.io/crates/lazyfossil) — distribution channel for the Rust application
 - [emojicombos.com/lazyfossil](https://emojicombos.com/lazyfossil) — project logo artwork source
+- ChatGPT — mascot creation and illustration
 
 ## Related tools
 

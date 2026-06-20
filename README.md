@@ -140,7 +140,7 @@ lazyfossil’s main screen is built around four views: Changes, Working tree, Fi
 
 This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
 
-Current version: `0.8.1`.
+Current version: `0.8.2`.
 
 ## Star History
 
@@ -159,6 +159,9 @@ crates.io is the distribution channel for the Rust application, helping make laz
 
 ### [emojicombos.com/lazyfossil](https://emojicombos.com/lazyfossil)
 This source provided the project logo artwork used in the README and assets, giving lazyfossil a recognizable visual identity.
+
+### ChatGPT
+ChatGPT was used for mascot creation and illustration.
 
 ## Other fossil companion tools
 
