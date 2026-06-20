@@ -146,6 +146,7 @@ impl App {
                 self.state.history_selected = 0;
                 self.state.timeline_selected = 0;
                 self.state.changes_selected = 0;
+                self.sync_changes_selection();
                 self.refresh_views();
                 self.refresh_timeline_details();
             }
@@ -316,7 +317,8 @@ impl App {
                     },
                 });
             } else {
-                self.state.diff = Some("No file selected".to_string());
+                self.state.preview_kind = PreviewKind::Notice;
+                self.state.diff = Some("No changes detected. Everything is clear.".to_string());
             }
         }
     }
@@ -1297,6 +1299,23 @@ mod tests {
         assert!(missing.contains("[[gone.txt]]"));
         let conflict = app.conflict_message("conflict.txt");
         assert!(conflict.contains("[[conflict.txt]]"));
+    }
+
+    #[test]
+    fn refresh_diff_shows_no_changes_message_when_list_is_empty() {
+        let mut app = App::new(false);
+        app.state.repo = Some(RepoState {
+            files: vec![],
+            timeline: vec![],
+            branches: vec![],
+            selected_file: 0,
+        });
+        app.refresh_diff();
+        assert_eq!(
+            app.state.diff.as_deref(),
+            Some("No changes detected. Everything is clear.")
+        );
+        assert_eq!(app.state.preview_kind, PreviewKind::Notice);
     }
 
     #[test]
